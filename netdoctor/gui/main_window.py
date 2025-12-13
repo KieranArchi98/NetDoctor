@@ -120,11 +120,15 @@ class MainWindow(QMainWindow):
 
     def load_view(self, view_name: str):
         """Load a view based on name."""
-        # Clear current content
+        # Clear current content - remove widgets but don't delete cached views
         while self.content_layout.count():
             child = self.content_layout.takeAt(0)
             if child.widget():
-                child.widget().deleteLater()
+                widget = child.widget()
+                # Only delete if it's not a cached view
+                if widget not in self.views.values():
+                    widget.deleteLater()
+                # Otherwise just remove from layout (widget stays alive)
 
         # Load view if not already created
         if view_name not in self.views:
@@ -155,4 +159,13 @@ class MainWindow(QMainWindow):
                 self.views[view_name] = placeholder
 
         # Add view to layout
-        self.content_layout.addWidget(self.views[view_name])
+        view = self.views[view_name]
+        # Check if view is already in the layout
+        already_in_layout = False
+        for i in range(self.content_layout.count()):
+            if self.content_layout.itemAt(i).widget() == view:
+                already_in_layout = True
+                break
+        
+        if not already_in_layout:
+            self.content_layout.addWidget(view)
