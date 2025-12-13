@@ -5,20 +5,13 @@ Bootstrap PySide6 application.
 """
 
 import sys
-from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QLabel,
-)
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+
+from netdoctor.gui.main_window import MainWindow
 
 
-class MainWindow(QMainWindow):
+def main():
     """Main application window with navigation rail."""
 
     def __init__(self):
@@ -108,22 +101,6 @@ class MainWindow(QMainWindow):
         # Add widgets to main layout
         main_layout.addWidget(nav_widget)
         main_layout.addWidget(content_widget, 1)
-
-    def on_nav_clicked(self, name: str):
-        """Handle navigation button clicks."""
-        # Uncheck all buttons
-        for btn in self.nav_buttons:
-            btn.setChecked(False)
-
-        # Check the clicked button
-        for btn in self.nav_buttons:
-            if btn.text() == name:
-                btn.setChecked(True)
-                break
-
-        # Update content (placeholder)
-        self.content_label.setText(f"{name} View\n\n(Coming soon)")
-
 
 def main():
     """Application entry point."""
