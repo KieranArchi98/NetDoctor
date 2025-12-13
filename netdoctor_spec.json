@@ -1,0 +1,505 @@
+{
+"project": {
+"name": "NetDoctor",
+"working_name": "NetDoctor - System & Network Diagnostic Toolkit",
+"summary": "Cross-platform (Windows/Linux/macOS) desktop application for sysadmins to run system and network diagnostics with a polished PySide6 GUI, background workers, exportable reports, and optional advanced features (SNMP, ARP, nmap integration).",
+"purpose": "Provide a single, polished tool that bundles common diagnostics (ping, traceroute, port-scan, DNS/whois, system overview) into an aesthetic, user-friendly desktop app suitable for production troubleshooting and for showcasing on GitHub.",
+"audience": ["system administrators", "network engineers", "devops engineers", "recruiters/technical hiring managers"],
+"license_recommendation": "MIT"
+},
+"goals_and_user_stories": {
+"goals": [
+"Provide common network checks (ping, traceroute, port scan, DNS lookup) in a single UI for quick triage",
+"Provide system diagnostics (CPU, memory, disk, network interfaces) to surface resource issues",
+"Run scans in background without freezing the UI",
+"Export results as CSV/PDF and create a shareable diagnostics bundle",
+"Offer advanced tools (SNMP poll, ARP scan, MAC vendor lookup, service checks) as optional features",
+"Ship a polished aesthetic UI suitable for portfolio/demo"
+],
+"user_stories": [
+"As a sysadmin I want to run a ping sweep and view results in a sortable table and chart",
+"As a sysadmin I want to run a port scan with concurrency settings and view banners",
+"As a sysadmin I want to view system metrics and sparklines for quick health checks",
+"As a sysadmin I want to save session history and export reports",
+"As a user I want clear warnings about legal and permission implications for network scanning"
+]
+},
+"mvp_features": {
+"description": "Minimum Viable Product features to build first (focused, high-impact)",
+"features": [
+{
+"id": "ping",
+"name": "Ping & Ping Sweep",
+"details": "ICMP ping using raw sockets where permitted, with subprocess fallback to system ping when raw sockets require elevated privileges. Single-host and sweep modes. Results table, latency chart, export to CSV."
+},
+{
+"id": "port_scan",
+"name": "TCP Port Scanner",
+"details": "TCP connect scanning across ranges with configurable concurrency and timeout. Results table with port/service/banner. Optional nmap integration if system has nmap installed."
+},
+{
+"id": "dns_whois",
+"name": "DNS Lookup and WHOIS",
+"details": "Use dnspython for record lookups (A, AAAA, CNAME, MX, NS, TXT). WHOIS via python-whois or subprocess. Display results in table and raw text pane."
+},
+{
+"id": "system_overview",
+"name": "System Overview",
+"details": "psutil-driven CPU, memory, disk, network interface metrics and sparklines. Interface table with IP/MAC/default gateway and RX/TX counters."
+},
+{
+"id": "background_worker",
+"name": "Asynchronous Task Runner",
+"details": "QRunnable + QThreadPool worker model with progress, error, finished signals. UI must remain responsive and allow cancellation."
+},
+{
+"id": "export",
+"name": "Export Results",
+"details": "CSV export for all result tables. JSON export for session bundles. PDF (optional, post-MVP)."
+}
+]
+},
+"advanced_features_post_mvp": [
+{
+"id": "arp_scan",
+"name": "ARP Local Network Discovery",
+"details": "Optional scapy-based ARP scanning or OS-specific ARP queries, MAC vendor lookup, results table with vendor info."
+},
+{
+"id": "snmp_poller",
+"name": "SNMP Poller",
+"details": "Use pysnmp to poll common OIDs (if community string provided). Display results in table and allow presets for common OIDs."
+},
+{
+"id": "nmap_integration",
+"name": "Nmap Integration",
+"details": "If nmap is installed detect it and optionally use it for advanced scans. Provide UI wrapper and parse nmap XML output."
+},
+{
+"id": "pdf_reports",
+"name": "PDF Report Generator",
+"details": "Generate printable diagnostic reports with ReportLab (or alternative) that include summary cards, charts and raw logs."
+},
+{
+"id": "network_map",
+"name": "Network Diagram Generator",
+"details": "Generate network diagrams from discovery results using Graphviz or SVG and embed in UI."
+},
+{
+"id": "realtime_monitoring",
+"name": "Live Interface Monitoring",
+"details": "pyqtgraph streaming charts for interface bandwidth and latency. Configurable refresh rates."
+}
+],
+"design_constraints_and_non_functional_requirements": {
+"cross_platform": "Windows, Linux, macOS (be careful with raw sockets/ICMP privileges and libpcap dependencies)",
+"no_root_fallback": "Implement non-root fallbacks: use subprocess ping and TCP connect for scanning if raw sockets need admin",
+"responsive_ui": "All IO/long tasks off main thread; use QRunnable/QThreadPool or qasync for async integration",
+"minimal_external_deps_by_default": "Optional extras for scapy, pysnmp, nmap; core works with pure-Python libs and psutil",
+"security_and_privacy": [
+"No telemetry by default; logs stored locally only",
+"Explicit user confirmation before performing network scans",
+"Sanitization options for exported reports",
+"Legal/responsible use warning in README and onboarding"
+],
+"packaging": "Provide single-file executables via PyInstaller (per-platform builds) or briefcase for native installers",
+"license": "Recommend MIT for open-source recruitment visibility"
+},
+"technology_choices_and_rationale": {
+"language": "Python (3.10+ recommended)",
+"gui_framework": {
+"choice": "PySide6 (Qt for Python)",
+"rationale": "LGPL-friendly licensing, modern Qt6 features, good community resources. Use Qt Designer for UI files."
+},
+"ui_design_tools": ["Qt Designer", "Qt Creator", "pyside6-uic", "QUiLoader"],
+"concurrency": ["QRunnable + QThreadPool", "QThread subclasses for complex tasks", "qasync optional for asyncio integration"],
+"core_libraries": {
+"psutil": "system metrics, processes, network IO",
+"dnspython": "DNS queries and parsing",
+"requests": "HTTP requests if needed for remote lookups (OUI, APIs)",
+"pyqtgraph": "Realtime charting and sparklines",
+"python-whois": "WHOIS lookups (optional)",
+"python-nmap or libnmap": "nmap integration wrapper (optional)",
+"scapy": "ARP discovery/advanced packet tasks (optional, depends on libpcap)",
+"pysnmp": "SNMP polling (optional)"
+},
+"dev_tools": ["poetry (recommended) or pip + venv", "PyInstaller (packaging)", "pytest (testing)", "black, ruff, mypy (linting/typing)", "GitHub Actions (CI)"],
+"icons_and_fonts": ["qtawesome (SVG icons)", "SVG icon collection (Font Awesome/Material icons)"],
+"styling_helpers": ["qdarktheme", "qt-material", "QSS (Qt Style Sheets)"]
+},
+"libraries_and_dependencies": {
+"essential": [
+"PySide6",
+"psutil",
+"dnspython",
+"requests",
+"pyqtgraph"
+],
+"optional": [
+"scapy",
+"python-nmap",
+"pysnmp",
+"python-whois",
+"ReportLab"
+],
+"dev_dependencies": [
+"pytest",
+"black",
+"ruff",
+"mypy",
+"pre-commit",
+"pyinstaller"
+]
+},
+"project_architecture_and_components": {
+"layers": [
+"core: pure-backend logic modules for each feature (ping, traceroute, portscan, dns, whois, systeminfo, report)",
+"workers: QRunnable/QThread implementations that wrap core functions and emit Qt signals",
+"gui: PySide6 views, widgets, main window, resource management",
+"storage: small SQLite or JSON store for history and settings",
+"cli_fallback: minimal CLI wrapper for headless use and integration tests",
+"tests: pytest tests for business logic and small integration tests"
+],
+"core_module_examples": [
+"netdoctor.core.ping",
+"netdoctor.core.traceroute",
+"netdoctor.core.portscanner",
+"netdoctor.core.dns",
+"netdoctor.core.whois",
+"netdoctor.core.systeminfo",
+"netdoctor.core.report"
+],
+"worker_layer": "netdoctor.workers.task_worker -> QRunnable with WorkerSignals (progress, finished, error), uses cancellation flags",
+"gui_layer": "netdoctor.gui.* (main_window, views/ping_view, views/ports_view, views/system_view, widgets/*)",
+"persistence_layer": "netdoctor.storage.history (SQLite or JSON), netdoctor.config (JSON for settings)",
+"utils": "logging, permission_checks, platform_detection"
+},
+"recommended_file_structure": {
+"root": {
+"type": "folder",
+"contents": {
+"netdoctor": {
+"type": "package",
+"contents": {
+"init.py": "package init",
+"main.py": "bootstrap PySide6 application",
+"core": {
+"ping.py": "ping logic",
+"traceroute.py": "traceroute logic",
+"portscanner.py": "port scanning logic",
+"dns.py": "dns wrapper",
+"whois.py": "whois wrapper",
+"systeminfo.py": "psutil wrappers",
+"report.py": "exporters"
+},
+"workers": {
+"task_worker.py": "QRunnable implementation"
+},
+"gui": {
+"main_window.py": "application shell",
+"views": {
+"ping_view.py": "UI and glue for ping",
+"portscan_view.py": "port scanner UI",
+"system_view.py": "system overview UI"
+},
+"widgets": {
+"results_table.py": "custom QTableView model",
+"cards.py": "small KPI card widgets",
+"progress_dialog.py": "progress UI"
+}
+},
+"storage": {
+"history.py": "history DB or JSON store"
+},
+"resources": {},
+"config.py": "global defaults and settings"
+}
+},
+"tests": {},
+"docs": {},
+".github": {
+"workflows": {
+"lint.yml": "linting workflow",
+"tests.yml": "unit tests workflow",
+"build.yml": "packaging builds per OS"
+}
+},
+"pyproject.toml": "poetry or setuptools config",
+"requirements.txt": "flat list fallback",
+"README.md": "project overview",
+"LICENSE": "MIT recommended",
+"CHANGELOG.md": ""
+}
+}
+},
+"gui_design_and_layout": {
+"theme_and_visual_direction": {
+"style": "Modern admin dashboard, dark-first with light option, subtle accents and micro-animations",
+"palette": {
+"background": "#0F1724",
+"surface": ["#111827", "#0b1220"],
+"accent_teal": "#14B8A6",
+"accent_blue": "#3B82F6",
+"muted_text": "#9CA3AF",
+"primary_text": "#E6EEF3",
+"alert_orange": "#F97316",
+"alert_red": "#EF4444"
+},
+"typography": {
+"primary_font": "Inter or system sans",
+"monospace": "system monospace for raw output",
+"sizes": {
+"title": 18,
+"heading": 14,
+"body": 12,
+"small": 11
+}
+},
+"micro_interactions": [
+"nav slide-in/out",
+"card elevation on hover",
+"progress bar pulses",
+"toast notifications (slide in/out)",
+"animated success checkmark on completed runs"
+]
+},
+"shell_and_main_layout": {
+"top_bar": {
+"components": ["logo", "quick-run/search", "theme_toggle", "help_icon", "global_status_icon"],
+"height": "thin (approx 48px)"
+},
+"left_navigation_rail": {
+"behavior": "collapsible, icons + labels",
+"items": [
+"Dashboard",
+"System",
+"Network Tools",
+"Discovery",
+"Monitoring",
+"Reports/History",
+"Settings/About"
+]
+},
+"main_content_area": {
+"structure": "dynamic view loader, header + content split",
+"header_region": ["title", "short description", "target input", "options", "start/stop/save buttons"],
+"three_column_layout": ["left (controls/presets)", "center (results table + raw output)", "right (summary cards + charts)"],
+"footer": "module-specific logs and export buttons"
+},
+"bottom_status_bar": {
+"components": ["task_queue_status", "threadpool_load", "last_run_timestamp", "quick_export_button"]
+}
+},
+"module_view_mapping": {
+"Ping": {
+"inputs": ["QLineEdit", "QSpinBox", "QComboBox (IPv4/IPv6)", "QCheckBox (continuous)"],
+"controls": ["Start (QPushButton)", "Stop (QPushButton)"],
+"results": ["QTableView backed by QStandardItemModel", "QPlainTextEdit (raw output)"],
+"charts": ["pyqtgraph.PlotWidget (latency over time)"],
+"worker": "QRunnable ping worker with progress signal"
+},
+"PortScan": {
+"inputs": ["QLineEdit (host)", "QLineEdit (port ranges)", "QSpinBox (threads)"],
+"results": ["QTableView (Port, State, Service, Banner)", "Modal for banner details"],
+"options": ["Checkbox: Use nmap if installed"],
+"worker": "QRunnable port scanner"
+},
+"Traceroute": {
+"inputs": ["QLineEdit", "QSpinBox (max hops)"],
+"results": ["QTreeView for hops", "pyqtgraph latency plot", "SVG network route visualization"]
+},
+"DNS_WHOIS": {
+"inputs": ["QLineEdit (domain)"],
+"results": ["QTableView for DNS records", "QPlainTextEdit for WHOIS"],
+"options": ["Registrar API key input (optional)"]
+},
+"SystemOverview": {
+"cards": ["CPU usage card", "Memory usage card", "Disk usage card", "Network interfaces card"],
+"tables": ["Interfaces table (IP/AP/MAC/RX/TX)"],
+"charts": ["pyqtgraph sparklines for each KPI"]
+},
+"ARP_Discovery": {
+"inputs": ["Interface selector QComboBox", "CIDR input or auto-detect"],
+"results": ["QTableView (IP, MAC, Vendor)", "Vendor lookup progress indicator"]
+},
+"SNMP": {
+"inputs": ["target IP", "community string", "OIDs preset selection"],
+"results": ["QTableView OID → value", "raw output pane"],
+"worker": "pysnmp QRunnable"
+},
+"Reports_History": {
+"list": ["QListView with card thumbnails"],
+"preview": ["report summary area", "download/export buttons"]
+},
+"Settings": {
+"items": ["global timeouts", "concurrency defaults", "paths to external tools (nmap)", "theme settings", "privacy settings", "legal acknowledgement checkboxes"]
+}
+},
+"qss_examples": {
+"nav": "QPushButton#navButton { border: none; padding: 10px; text-align: left; } QPushButton#navButton:hover { background: rgba(255,255,255,0.03); } QPushButton#navButton:checked { background: rgba(20,184,166,0.12); color: #14B8A6; }",
+"card": "QWidget.card { border-radius: 10px; background: rgba(255,255,255,0.02); padding: 12px; margin: 8px; }"
+}
+},
+"concurrency_and_worker_model": {
+"model": "QRunnable + QThreadPool",
+"worker_signals": ["progress (int)", "row (dict)", "error (Exception)", "finished (result)"],
+"cancellation": "Workers accept a thread-safe cancellation flag that is checked periodically and stops workers gracefully when set.",
+"ui_integration": "Connect worker signals to slots that update QTableModels, pyqtgraph plots, and progress bars. Enable/disable action buttons based on state."
+},
+"fallback_strategies_and_platform_considerations": {
+"raw_icmp_permissions": "Attempt raw socket ping; if permission denied, fallback to calling system ping via subprocess and parse output.",
+"packet_crafting": "scapy optional and depends on libpcap/WinPcap/Npcap; make scapy features optional and auto-detect availability at runtime.",
+"nmap_integration": "Detect nmap binary path and version. If present, present UI option to use nmap and parse its XML output. If not present, keep using built-in TCP connect scan.",
+"snmp": "Require user-provided community strings or credentials. Document security implications."
+},
+"security_privacy_and_legal": {
+"permission_warnings": "All aggressive scan actions require an explicit affirmation checkbox 'I have permission to scan this network' that the user must click before running.",
+"logging_policy": "Logs stored locally only. Provide export functionality only upon explicit user action.",
+"data_sanitization": "Provide options to redact IPs or usernames in exported reports.",
+"legal_disclaimer": "Include a prominent notice in the README and in-app settings about responsible use and legal limitations."
+},
+"testing_ci_and_quality": {
+"testing_strategy": {
+"unit_tests": "Test pure logic modules, parsers, and configuration handling using pytest.",
+"integration_tests": "Optional, can run on loopback or specialized test network with appropriate markers.",
+"ui_tests": "Manual. Optional automated UI tests using pytest-qt for certain flows.",
+"mocking": "Mock network IO in unit tests where possible (e.g., socket/network calls)."
+},
+"ci": {
+"platform": "GitHub Actions",
+"workflows": [
+{
+"name": "lint",
+"steps": ["black --check", "ruff", "mypy"]
+},
+{
+"name": "test",
+"steps": ["pytest -q"]
+},
+{
+"name": "build",
+"notes": "Use platform-specific runners to create PyInstaller builds; Windows runner for Windows executables, Linux runner for Linux builds, macOS runner for Mac builds."
+}
+]
+}
+},
+"packaging_and_distribution": {
+"tools": ["PyInstaller (single-file executables)", "poetry or setuptools for packaging", "briefcase optional for native installers"],
+"release_process": [
+"Create GitHub release with binaries attached",
+"Provide detailed install instructions and changelog",
+"Sign executables if producing official releases"
+],
+"versioning": "Semantic Versioning (MAJOR.MINOR.PATCH)"
+},
+"documentation_and_github_polish": {
+"readme_components": [
+"Project summary & tagline",
+"Screenshots & short demo GIF",
+"MVP features & advanced features list",
+"Install instructions (dev & packaged builds)",
+"Usage examples & common workflows",
+"Legal & privacy notice",
+"Contribution & license"
+],
+"docs": "Detailed module docs under /docs and developer guide (how to add new scans, how to add a new view)",
+"additional": ["CHANGELOG.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md"]
+},
+"roadmap_and_phase_plan": {
+"phase_0_preparation": [
+"Create GitHub repository with LICENSE (MIT) and README template",
+"Initialize pyproject.toml with poetry or set up venv + requirements.txt",
+"Add pre-commit hooks (black, ruff)"
+],
+"phase_1_research_and_prototyping": [
+"Prototype ping module with raw ICMP + subprocess fallback",
+"Prototype systeminfo module using psutil",
+"Prototype threading model: minimal PySide6 app using QRunnable and signals"
+],
+"phase_2_mvp_backend_and_minimal_gui": [
+"Implement backend modules for ping, traceroute (subprocess fallback), DNS, simple TCP port scanner",
+"Implement worker classes and QThreadPool usage",
+"Build minimal GUI skeleton with left nav and a Ping view that runs and shows results",
+"Add CSV export for results"
+],
+"phase_3_polish_mvp": [
+"Improve UI/UX, add icons and theme toggle, add settings page",
+"Add persisted settings (JSON/SQLite), add history",
+"Add unit tests and basic CI"
+],
+"phase_4_advanced_features": [
+"Add ARP discovery (scapy optional), SNMP poller (pysnmp), optional nmap integration",
+"Implement PDF report generation",
+"Implement network diagram generation"
+],
+"phase_5_packaging_and_release": [
+"Create PyInstaller builds for each target OS",
+"Publish GitHub release with executables and documentation"
+],
+"phase_6_outreach": [
+"Add polished README, demo GIF, blog post 'How I built NetDoctor', share on GitHub/LinkedIn"
+]
+},
+"ui_navigation_state_and_signals": {
+"navigation": {
+"left_nav": "collapsible rail controlling which view is loaded into the main content area",
+"lazy_loading": "heavy components (pyqtgraph, scapy) are imported/initialized on demand"
+},
+"state_machine": {
+"states": ["idle", "running", "cancelling", "finished", "error"],
+"transitions": [
+{"from": "idle", "action": "start_scan", "to": "running"},
+{"from": "running", "action": "cancel", "to": "cancelling"},
+{"from": "cancelling", "action": "worker_exited", "to": "idle"},
+{"from": "running", "action": "worker_finished", "to": "finished"},
+{"from": "finished", "action": "ack", "to": "idle"},
+{"from": "running", "action": "error", "to": "error"}
+]
+},
+"signals": {
+"worker_signals": ["progress", "row_result", "log_line", "error", "finished"],
+"ui_signals": ["start_clicked", "stop_clicked", "export_requested", "settings_changed"]
+}
+},
+"accessibility_and_responsiveness": {
+"keyboard": "Ensure tab order, keyboard shortcuts (Ctrl+R run, Ctrl+E export, Ctrl+T theme toggle)",
+"high_dpi": "Use SVG icons and Qt high-DPI scaling (QApplication.setAttribute(Qt.AA_EnableHighDpiScaling))",
+"contrast": "Colors chosen to ensure readable contrast; provide light mode alternative",
+"tooltips": "Provide descriptive tooltips for all controls"
+},
+"deliverables_and_next_steps": {
+"options_for_next_output": [
+"Produce JSON schematic (this document) for other AI/automation tools (e.g., Cursor)",
+"Produce starter code skeleton with PySide6 app shell + left nav + Ping module using QRunnable and pyqtgraph placeholder",
+"Produce a visual mock (PNG/SVG) of the wireframe and theme",
+"Produce pyproject.toml and requirements.txt with pinned minimal versions"
+],
+"immediate_recommendation": "Begin with PySide6 and build Ping + System Overview + Port Scanner module as MVP. I can generate starter skeleton code for these modules next."
+},
+"sample_pyproject_and_commands": {
+"pyproject_toml_snippet": "[tool.poetry]\nname = "netdoctor"\nversion = "0.1.0"\ndescription = "System & Network Diagnostic Toolkit"\nauthors = ["Your Name you@example.com
+"]\n[tool.poetry.dependencies]\npython = "^3.10"\nPySide6 = "^6.5"\npsutil = "^5.9"\npyqtgraph = "^0.13"\ndnspython = "^2.2"\nrequests = "^2.31"\n[tool.poetry.dev-dependencies]\npytest = "^7.4"\nblack = "^23.9"\nruff = "^0.9"",
+"setup_commands": [
+"python -m venv .venv",
+"source .venv/bin/activate # or .venv\Scripts\activate on Windows",
+"pip install -U pip",
+"pip install -r requirements.txt # or use poetry install"
+],
+"run_dev": [
+"python -m netdoctor.main",
+"or run from VS Code with configured launch.json"
+]
+},
+"notes_and_caveats": {
+"notes": [
+"Make optional heavy/developer-only dependencies optional extras to keep core install light.",
+"Document admin/root requirements for raw sockets and packet capture.",
+"Be conservative in default scan aggressiveness; default to slow/safe settings.",
+"When integrating external libraries (scapy/pysnmp), add runtime detection and clear UI guidance for missing dependencies."
+],
+"caveats": [
+"Network scanning may be illegal without permission—provide explicit warnings and rate-limit defaults.",
+"Cross-platform packaging (especially macOS signing/packaging) can be more complex than Linux/Windows."
+]
+}
+}
