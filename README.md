@@ -69,6 +69,3 @@ The application will launch with a minimal GUI showing:
 
 **Important**: Network scanning may be illegal without proper authorization. This tool is intended for authorized network diagnostics only. Users are responsible for ensuring they have permission to scan target networks. Always obtain explicit authorization before performing network scans.
 
-## License
-
-MIT License - See LICENSE file for details.
