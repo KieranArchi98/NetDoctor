@@ -18,6 +18,7 @@ import pyqtgraph as pg
 from netdoctor.workers.task_worker import TaskWorker, WorkerSignals
 from netdoctor.core import systeminfo
 from netdoctor.gui.widgets.cards import KPICard
+from netdoctor.gui.widgets.ui_components import SectionHeader, CardContainer, LoadingSpinner
 
 
 class SystemView(QWidget):
@@ -35,55 +36,15 @@ class SystemView(QWidget):
     def init_ui(self):
         """Initialize the UI."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(20)
 
-        # Header with refresh controls
-        header_layout = QHBoxLayout()
-        title = QLabel("System Overview")
-        title.setStyleSheet("color: #E6EEF3; font-size: 18px; font-weight: bold;")
-        header_layout.addWidget(title)
-        header_layout.addStretch()
-
-        self.start_monitoring_button = QPushButton("Start Monitoring")
-        self.start_monitoring_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #14B8A6;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #0D9488;
-            }
-        """
-        )
-        self.start_monitoring_button.clicked.connect(self.start_monitoring)
-
-        self.stop_monitoring_button = QPushButton("Stop Monitoring")
+        # Page header with controls
+        header = SectionHeader("System Overview", "Monitor system resources and network interfaces")
+        self.stop_monitoring_button = header.add_action_button("Stop Monitoring", self.stop_monitoring, "danger")
         self.stop_monitoring_button.setEnabled(False)
-        self.stop_monitoring_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #EF4444;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #DC2626;
-            }
-            QPushButton:disabled {
-                background-color: #374151;
-                color: #9CA3AF;
-            }
-        """
-        )
-        self.stop_monitoring_button.clicked.connect(self.stop_monitoring)
-
-        header_layout.addWidget(self.start_monitoring_button)
-        header_layout.addWidget(self.stop_monitoring_button)
-        layout.addLayout(header_layout)
+        self.start_monitoring_button = header.add_action_button("Start Monitoring", self.start_monitoring, "primary")
+        layout.addWidget(header)
 
         # KPI Cards
         cards_layout = QHBoxLayout()
@@ -101,80 +62,70 @@ class SystemView(QWidget):
 
         layout.addLayout(cards_layout)
 
-        # Charts row
+        # Charts row in cards
         charts_layout = QHBoxLayout()
-        charts_layout.setSpacing(16)
+        charts_layout.setSpacing(20)
 
-        # CPU chart
-        cpu_chart_widget = QWidget()
-        cpu_chart_layout = QVBoxLayout(cpu_chart_widget)
-        cpu_chart_layout.setContentsMargins(0, 0, 0, 0)
+        # CPU chart card
+        cpu_chart_card = CardContainer(hover_elevation=False)
+        cpu_chart_layout = QVBoxLayout(cpu_chart_card)
+        cpu_chart_layout.setSpacing(12)
 
         cpu_chart_label = QLabel("CPU Usage")
-        cpu_chart_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
+        cpu_chart_label.setObjectName("sectionTitle")
         cpu_chart_layout.addWidget(cpu_chart_label)
 
         self.cpu_chart = pg.PlotWidget()
-        self.cpu_chart.setBackground("#111827")
-        self.cpu_chart.setLabel("left", "Usage (%)", color="#E6EEF3")
-        self.cpu_chart.setLabel("bottom", "Time", color="#E6EEF3")
+        self.cpu_chart.setBackground("#181825")  # bg_sidebar
+        self.cpu_chart.setLabel("left", "Usage (%)", color="#E4E4E7")  # text_primary
+        self.cpu_chart.setLabel("bottom", "Time", color="#E4E4E7")  # text_primary
         self.cpu_chart.setYRange(0, 100)
-        self.cpu_chart.getAxis("left").setPen(pg.mkPen(color="#E6EEF3"))
-        self.cpu_chart.getAxis("bottom").setPen(pg.mkPen(color="#E6EEF3"))
-        self.cpu_line = self.cpu_chart.plot([], [], pen=pg.mkPen(color="#14B8A6", width=2))
+        self.cpu_chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.cpu_chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.cpu_line = self.cpu_chart.plot([], [], pen=pg.mkPen(color="#4A90E2", width=2))  # primary_blue
         cpu_chart_layout.addWidget(self.cpu_chart)
 
-        charts_layout.addWidget(cpu_chart_widget, 1)
+        charts_layout.addWidget(cpu_chart_card, 1)
 
-        # Memory chart
-        memory_chart_widget = QWidget()
-        memory_chart_layout = QVBoxLayout(memory_chart_widget)
-        memory_chart_layout.setContentsMargins(0, 0, 0, 0)
+        # Memory chart card
+        memory_chart_card = CardContainer(hover_elevation=False)
+        memory_chart_layout = QVBoxLayout(memory_chart_card)
+        memory_chart_layout.setSpacing(12)
 
         memory_chart_label = QLabel("Memory Usage")
-        memory_chart_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
+        memory_chart_label.setObjectName("sectionTitle")
         memory_chart_layout.addWidget(memory_chart_label)
 
         self.memory_chart = pg.PlotWidget()
-        self.memory_chart.setBackground("#111827")
-        self.memory_chart.setLabel("left", "Usage (%)", color="#E6EEF3")
-        self.memory_chart.setLabel("bottom", "Time", color="#E6EEF3")
+        self.memory_chart.setBackground("#181825")  # bg_sidebar
+        self.memory_chart.setLabel("left", "Usage (%)", color="#E4E4E7")  # text_primary
+        self.memory_chart.setLabel("bottom", "Time", color="#E4E4E7")  # text_primary
         self.memory_chart.setYRange(0, 100)
-        self.memory_chart.getAxis("left").setPen(pg.mkPen(color="#E6EEF3"))
-        self.memory_chart.getAxis("bottom").setPen(pg.mkPen(color="#E6EEF3"))
-        self.memory_line = self.memory_chart.plot([], [], pen=pg.mkPen(color="#3B82F6", width=2))
+        self.memory_chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.memory_chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.memory_line = self.memory_chart.plot([], [], pen=pg.mkPen(color="#5BA3F5", width=2))  # secondary_blue
         memory_chart_layout.addWidget(self.memory_chart)
 
-        charts_layout.addWidget(memory_chart_widget, 1)
+        charts_layout.addWidget(memory_chart_card, 1)
 
         layout.addLayout(charts_layout)
 
-        # Interfaces table
-        interfaces_label = QLabel("Network Interfaces")
-        interfaces_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
-        layout.addWidget(interfaces_label)
+        # Network interfaces section
+        interfaces_section = SectionHeader("Network Interfaces", "Active network adapters and statistics")
+        layout.addWidget(interfaces_section)
 
+        # Interfaces table in card
+        interfaces_card = CardContainer(hover_elevation=False)
+        interfaces_card_layout = QVBoxLayout(interfaces_card)
+        interfaces_card_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.interfaces_table = QTableWidget()
         self.interfaces_table.setColumnCount(6)
         self.interfaces_table.setHorizontalHeaderLabels(["Name", "IP", "MAC", "MTU", "RX Bytes", "TX Bytes"])
-        self.interfaces_table.setStyleSheet(
-            """
-            QTableWidget {
-                background-color: #111827;
-                color: #E6EEF3;
-                gridline-color: #1F2937;
-                border: 1px solid #374151;
-            }
-            QHeaderView::section {
-                background-color: #1F2937;
-                color: #E6EEF3;
-                padding: 8px;
-                border: none;
-            }
-        """
-        )
         self.interfaces_table.setAlternatingRowColors(True)
-        layout.addWidget(self.interfaces_table)
+        interfaces_card_layout.addWidget(self.interfaces_table)
+        
+        layout.addWidget(interfaces_card)
 
     def load_system_info(self):
         """Load system information via worker."""
@@ -238,8 +189,10 @@ class SystemView(QWidget):
 
     def start_monitoring(self):
         """Start live monitoring."""
-        self.start_monitoring_button.setEnabled(False)
-        self.stop_monitoring_button.setEnabled(True)
+        if self.start_monitoring_button:
+            self.start_monitoring_button.setEnabled(False)
+        if self.stop_monitoring_button:
+            self.stop_monitoring_button.setEnabled(True)
 
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.update_monitoring)
@@ -254,8 +207,10 @@ class SystemView(QWidget):
             self.refresh_timer.stop()
             self.refresh_timer = None
 
-        self.start_monitoring_button.setEnabled(True)
-        self.stop_monitoring_button.setEnabled(False)
+        if self.start_monitoring_button:
+            self.start_monitoring_button.setEnabled(True)
+        if self.stop_monitoring_button:
+            self.stop_monitoring_button.setEnabled(False)
 
     def update_monitoring(self):
         """Update monitoring data."""

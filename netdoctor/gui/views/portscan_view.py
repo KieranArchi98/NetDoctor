@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QSpinBox,
     QMessageBox,
-    QDialog,
     QTextEdit,
     QCheckBox,
 )
@@ -21,58 +20,30 @@ from typing import Optional
 from netdoctor.workers.task_worker import TaskWorker, WorkerSignals
 from netdoctor.core import portscanner
 from netdoctor.gui.widgets.results_table import ResultsTableView
+from netdoctor.gui.widgets.ui_components import SectionHeader, CardContainer, ModalDialog
 
 
-class BannerDialog(QDialog):
+class BannerDialog(ModalDialog):
     """Dialog for displaying banner information."""
 
     def __init__(self, port: int, banner: str, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(f"Banner - Port {port}")
+        super().__init__(f"Banner - Port {port}", f"Banner information for port {port}", parent)
         self.setMinimumSize(500, 300)
-        self.setStyleSheet(
-            """
-            QDialog {
-                background-color: #0F1724;
-            }
-            QTextEdit {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                font-family: monospace;
-                padding: 8px;
-            }
-        """
-        )
-
-        layout = QVBoxLayout(self)
-        layout.setSpacing(12)
-
-        label = QLabel(f"Banner for port {port}:")
-        label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
-        layout.addWidget(label)
-
+        
+        # Get the layout
+        layout = self.layout()
+        
+        # Create text edit for banner content
         self.banner_text = QTextEdit()
         self.banner_text.setReadOnly(True)
         self.banner_text.setText(banner if banner else "No banner available")
-        layout.addWidget(self.banner_text)
-
-        close_button = QPushButton("Close")
-        close_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #3B82F6;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #2563EB;
-            }
-        """
-        )
-        close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
+        
+        # Insert before button container
+        button_container_index = layout.count() - 1
+        layout.insertWidget(button_container_index, self.banner_text)
+        
+        # Update buttons
+        self.add_button("Close", "secondary", self.accept)
 
 
 class PortScanView(QWidget):
@@ -87,157 +58,98 @@ class PortScanView(QWidget):
     def init_ui(self):
         """Initialize the UI."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(20)
 
-        # Header section
-        header_layout = QVBoxLayout()
-        header_layout.setSpacing(12)
+        # Page header
+        header = SectionHeader("Port Scanner", "Scan TCP ports and retrieve service banners")
+        layout.addWidget(header)
 
-        # Host input
-        host_layout = QHBoxLayout()
+        # Input section in card
+        input_card = CardContainer(hover_elevation=False)
+        input_layout = QVBoxLayout(input_card)
+        input_layout.setSpacing(16)
+
+        # Host input row
+        host_row = QHBoxLayout()
+        host_row.setSpacing(12)
         host_label = QLabel("Host:")
-        host_label.setStyleSheet("color: #E6EEF3;")
+        host_label.setMinimumWidth(80)
         self.host_input = QLineEdit()
         self.host_input.setPlaceholderText("127.0.0.1 or example.com")
-        self.host_input.setStyleSheet(
-            """
-            QLineEdit {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                padding: 8px;
-                border-radius: 4px;
-            }
-        """
-        )
-        host_layout.addWidget(host_label)
-        host_layout.addWidget(self.host_input, 1)
-        header_layout.addLayout(host_layout)
+        host_row.addWidget(host_label)
+        host_row.addWidget(self.host_input, 1)
+        input_layout.addLayout(host_row)
 
-        # Port range and thread count
-        options_layout = QHBoxLayout()
-        options_layout.setSpacing(12)
+        # Port range and options row
+        options_row = QHBoxLayout()
+        options_row.setSpacing(12)
 
         port_label = QLabel("Ports:")
-        port_label.setStyleSheet("color: #E6EEF3;")
+        port_label.setMinimumWidth(80)
         self.port_input = QLineEdit()
         self.port_input.setPlaceholderText("80,443,8000-8010")
         self.port_input.setText("80,443,8080")
-        self.port_input.setStyleSheet(
-            """
-            QLineEdit {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                padding: 8px;
-                border-radius: 4px;
-            }
-        """
-        )
 
         thread_label = QLabel("Threads:")
-        thread_label.setStyleSheet("color: #E6EEF3;")
         self.thread_input = QSpinBox()
         self.thread_input.setMinimum(1)
         self.thread_input.setMaximum(500)
         self.thread_input.setValue(50)
-        self.thread_input.setStyleSheet(
-            """
-            QSpinBox {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                padding: 8px;
-                border-radius: 4px;
-            }
-        """
-        )
+        self.thread_input.setMaximumWidth(100)
 
         banner_label = QLabel("Banner Grab:")
-        banner_label.setStyleSheet("color: #E6EEF3;")
-
         self.banner_checkbox = QCheckBox()
-        self.banner_checkbox.setStyleSheet(
-            """
-            QCheckBox {
-                color: #E6EEF3;
-            }
-        """
-        )
 
-        options_layout.addWidget(port_label)
-        options_layout.addWidget(self.port_input, 1)
-        options_layout.addWidget(thread_label)
-        options_layout.addWidget(self.thread_input)
-        options_layout.addWidget(banner_label)
-        options_layout.addWidget(self.banner_checkbox)
-        options_layout.addStretch()
+        options_row.addWidget(port_label)
+        options_row.addWidget(self.port_input, 1)
+        options_row.addWidget(thread_label)
+        options_row.addWidget(self.thread_input)
+        options_row.addWidget(banner_label)
+        options_row.addWidget(self.banner_checkbox)
+        options_row.addStretch()
+        input_layout.addLayout(options_row)
 
-        header_layout.addLayout(options_layout)
-
-        # Buttons
-        buttons_layout = QHBoxLayout()
-        buttons_layout.setSpacing(12)
+        # Action buttons row
+        buttons_row = QHBoxLayout()
+        buttons_row.setSpacing(12)
 
         self.start_button = QPushButton("Start Scan")
-        self.start_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #14B8A6;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #0D9488;
-            }
-            QPushButton:disabled {
-                background-color: #374151;
-                color: #9CA3AF;
-            }
-        """
-        )
+        self.start_button.setObjectName("primaryButton")
         self.start_button.clicked.connect(self.start_scan)
 
         self.stop_button = QPushButton("Stop Scan")
+        self.stop_button.setObjectName("dangerButton")
         self.stop_button.setEnabled(False)
-        self.stop_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #EF4444;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #DC2626;
-            }
-            QPushButton:disabled {
-                background-color: #374151;
-                color: #9CA3AF;
-            }
-        """
-        )
         self.stop_button.clicked.connect(self.stop_scan)
+        
+        # Add press animations
+        from netdoctor.gui.widgets.button_helpers import add_press_animation
+        add_press_animation(self.start_button)
+        add_press_animation(self.stop_button)
+        
+        buttons_row.addWidget(self.start_button)
+        buttons_row.addWidget(self.stop_button)
+        buttons_row.addStretch()
+        input_layout.addLayout(buttons_row)
 
-        buttons_layout.addWidget(self.start_button)
-        buttons_layout.addWidget(self.stop_button)
-        buttons_layout.addStretch()
+        layout.addWidget(input_card)
 
-        header_layout.addLayout(buttons_layout)
-        layout.addLayout(header_layout)
+        # Results section
+        results_section = SectionHeader("Scan Results", "Discovered open ports and services")
+        layout.addWidget(results_section)
 
-        # Results table
-        results_label = QLabel("Scan Results")
-        results_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
-        layout.addWidget(results_label)
+        # Results table in card
+        results_card = CardContainer(hover_elevation=False)
+        results_card_layout = QVBoxLayout(results_card)
+        results_card_layout.setContentsMargins(0, 0, 0, 0)
 
         self.results_table = ResultsTableView(["port", "state", "service", "banner"])
         self.results_table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.results_table.customContextMenuRequested.connect(self.show_banner_context_menu)
-        layout.addWidget(self.results_table)
+        results_card_layout.addWidget(self.results_table)
+
+        layout.addWidget(results_card)
 
     def start_scan(self):
         """Start port scan."""

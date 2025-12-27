@@ -13,13 +13,16 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QFileDialog,
     QMessageBox,
+    QFrame,
 )
 from PySide6.QtCore import QThreadPool, Qt
+from typing import Optional
 import pyqtgraph as pg
 
 from netdoctor.workers.task_worker import TaskWorker, WorkerSignals
 from netdoctor.core import ping
 from netdoctor.gui.widgets.results_table import ResultsTableView
+from netdoctor.gui.widgets.ui_components import SectionHeader, CardContainer, LoadingSpinner
 
 
 class PingView(QWidget):
@@ -34,158 +37,113 @@ class PingView(QWidget):
     def init_ui(self):
         """Initialize the UI."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(20)
 
-        # Header section
-        header_layout = QHBoxLayout()
-        header_layout.setSpacing(12)
+        # Page header
+        header = SectionHeader("Ping Tool", "Test network connectivity and measure latency")
+        header.add_action_button("Export CSV", self.export_csv, "secondary")
+        layout.addWidget(header)
 
-        # Host input
+        # Input section in a card
+        input_card = CardContainer(hover_elevation=False)
+        input_layout = QVBoxLayout(input_card)
+        input_layout.setSpacing(16)
+
+        # Host input row
+        host_row = QHBoxLayout()
+        host_row.setSpacing(12)
         host_label = QLabel("Host:")
-        host_label.setStyleSheet("color: #E6EEF3;")
+        host_label.setMinimumWidth(80)
         self.host_input = QLineEdit()
         self.host_input.setPlaceholderText("127.0.0.1 or example.com")
-        self.host_input.setStyleSheet(
-            """
-            QLineEdit {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                padding: 8px;
-                border-radius: 4px;
-            }
-        """
-        )
+        host_row.addWidget(host_label)
+        host_row.addWidget(self.host_input, 1)
+        input_layout.addLayout(host_row)
 
-        # Count input
+        # Options row
+        options_row = QHBoxLayout()
+        options_row.setSpacing(12)
+        
         count_label = QLabel("Count:")
-        count_label.setStyleSheet("color: #E6EEF3;")
+        count_label.setMinimumWidth(80)
         self.count_input = QSpinBox()
         self.count_input.setMinimum(1)
         self.count_input.setMaximum(100)
         self.count_input.setValue(4)
-        self.count_input.setStyleSheet(
-            """
-            QSpinBox {
-                background-color: #111827;
-                color: #E6EEF3;
-                border: 1px solid #374151;
-                padding: 8px;
-                border-radius: 4px;
-            }
-        """
-        )
-
-        # Buttons
-        self.start_button = QPushButton("Start")
-        self.start_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #14B8A6;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #0D9488;
-            }
-            QPushButton:disabled {
-                background-color: #374151;
-                color: #9CA3AF;
-            }
-        """
-        )
+        self.count_input.setMaximumWidth(100)
+        
+        options_row.addWidget(count_label)
+        options_row.addWidget(self.count_input)
+        options_row.addStretch()
+        
+        # Action buttons
+        self.start_button = QPushButton("Start Ping")
+        self.start_button.setObjectName("primaryButton")
         self.start_button.clicked.connect(self.start_ping)
-
+        
         self.stop_button = QPushButton("Stop")
+        self.stop_button.setObjectName("dangerButton")
         self.stop_button.setEnabled(False)
-        self.stop_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #EF4444;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #DC2626;
-            }
-            QPushButton:disabled {
-                background-color: #374151;
-                color: #9CA3AF;
-            }
-        """
-        )
         self.stop_button.clicked.connect(self.stop_ping)
-
-        self.export_button = QPushButton("Export CSV")
-        self.export_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #3B82F6;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #2563EB;
-            }
-        """
-        )
-        self.export_button.clicked.connect(self.export_csv)
-
-        header_layout.addWidget(host_label)
-        header_layout.addWidget(self.host_input, 1)
-        header_layout.addWidget(count_label)
-        header_layout.addWidget(self.count_input)
-        header_layout.addWidget(self.start_button)
-        header_layout.addWidget(self.stop_button)
-        header_layout.addWidget(self.export_button)
-        header_layout.addStretch()
-
-        layout.addLayout(header_layout)
+        
+        # Add press animations
+        from netdoctor.gui.widgets.button_helpers import add_press_animation
+        add_press_animation(self.start_button)
+        add_press_animation(self.stop_button)
+        
+        options_row.addWidget(self.start_button)
+        options_row.addWidget(self.stop_button)
+        input_layout.addLayout(options_row)
+        
+        layout.addWidget(input_card)
 
         # Results section - split view
         results_layout = QHBoxLayout()
-        results_layout.setSpacing(16)
+        results_layout.setSpacing(20)
 
-        # Table
-        table_widget = QWidget()
-        table_layout = QVBoxLayout(table_widget)
-        table_layout.setContentsMargins(0, 0, 0, 0)
-
-        table_label = QLabel("Results")
-        table_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
-        table_layout.addWidget(table_label)
+        # Table card
+        table_card = CardContainer(hover_elevation=False)
+        table_card_layout = QVBoxLayout(table_card)
+        table_card_layout.setSpacing(12)
+        
+        table_header = QLabel("Results")
+        table_header.setObjectName("sectionTitle")
+        table_card_layout.addWidget(table_header)
 
         self.results_table = ResultsTableView(["seq", "host", "rtt_ms", "ttl", "status"])
-        table_layout.addWidget(self.results_table)
+        table_card_layout.addWidget(self.results_table)
 
-        results_layout.addWidget(table_widget, 1)
+        results_layout.addWidget(table_card, 1)
 
-        # Chart
-        chart_widget = QWidget()
-        chart_layout = QVBoxLayout(chart_widget)
-        chart_layout.setContentsMargins(0, 0, 0, 0)
+        # Chart card
+        chart_card = CardContainer(hover_elevation=False)
+        chart_card_layout = QVBoxLayout(chart_card)
+        chart_card_layout.setSpacing(12)
 
-        chart_label = QLabel("Latency Chart")
-        chart_label.setStyleSheet("color: #E6EEF3; font-size: 14px; font-weight: bold;")
-        chart_layout.addWidget(chart_label)
+        chart_header = QLabel("Latency Chart")
+        chart_header.setObjectName("sectionTitle")
+        chart_card_layout.addWidget(chart_header)
 
         self.chart = pg.PlotWidget()
-        self.chart.setBackground("#111827")
-        self.chart.setLabel("left", "RTT (ms)", color="#E6EEF3")
-        self.chart.setLabel("bottom", "Sequence", color="#E6EEF3")
-        self.chart.getAxis("left").setPen(pg.mkPen(color="#E6EEF3"))
-        self.chart.getAxis("bottom").setPen(pg.mkPen(color="#E6EEF3"))
-        self.chart_line = self.chart.plot([], [], pen=pg.mkPen(color="#14B8A6", width=2))
-        chart_layout.addWidget(self.chart)
+        self.chart.setBackground("#181825")  # bg_sidebar
+        self.chart.setLabel("left", "RTT (ms)", color="#E4E4E7")  # text_primary
+        self.chart.setLabel("bottom", "Sequence", color="#E4E4E7")  # text_primary
+        self.chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
+        self.chart_line = self.chart.plot([], [], pen=pg.mkPen(color="#4A90E2", width=2))  # primary_blue
+        chart_card_layout.addWidget(self.chart)
 
-        results_layout.addWidget(chart_widget, 1)
+        results_layout.addWidget(chart_card, 1)
 
         layout.addLayout(results_layout, 1)
+        
+        # Empty state label (hidden by default)
+        self.empty_state = QLabel("Enter a host and click 'Start Ping' to begin")
+        self.empty_state.setObjectName("sectionSubtitle")
+        self.empty_state.setAlignment(Qt.AlignCenter)
+        self.empty_state.hide()
+        layout.addWidget(self.empty_state)
 
     def start_ping(self):
         """Start ping operation."""
@@ -200,6 +158,7 @@ class PingView(QWidget):
         # Clear previous results
         self.results_table.model.clear()
         self.chart_line.setData([], [])
+        self.empty_state.hide()
 
         # Disable start, enable stop
         self.start_button.setEnabled(False)
@@ -259,6 +218,10 @@ class PingView(QWidget):
         self.host_input.setEnabled(True)
         self.count_input.setEnabled(True)
         self.current_worker = None
+        
+        # Show empty state if no results
+        if not self.ping_results:
+            self.empty_state.show()
 
     def on_ping_error(self, error_msg: str):
         """Handle ping error."""

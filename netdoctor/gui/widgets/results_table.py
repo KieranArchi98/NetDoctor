@@ -64,19 +64,3 @@ class ResultsTableView(QTableView):
         self.setModel(self.model)
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QTableView.SelectRows)
-        self.setStyleSheet(
-            """
-            QTableView {
-                background-color: #111827;
-                color: #E6EEF3;
-                gridline-color: #1F2937;
-                border: 1px solid #374151;
-            }
-            QHeaderView::section {
-                background-color: #1F2937;
-                color: #E6EEF3;
-                padding: 8px;
-                border: none;
-            }
-        """
-        )

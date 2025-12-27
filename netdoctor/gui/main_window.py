@@ -2,170 +2,192 @@
 Application shell - main window implementation.
 """
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QStackedWidget,
+    QLabel
+)
+from PySide6.QtGui import QIcon
 
 from netdoctor.gui.views.ping_view import PingView
 from netdoctor.gui.views.system_view import SystemView
 from netdoctor.gui.views.portscan_view import PortScanView
+from netdoctor.gui.views.dashboard_view import DashboardView
+from netdoctor.gui.widgets.sidebar import Sidebar
+from netdoctor.gui.widgets.animations import fade_in
 
 
 class MainWindow(QMainWindow):
-    """Main application window with navigation rail."""
+    """Main application window with sidebar navigation and stacked content."""
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("NetDoctor")
-        self.setMinimumSize(1000, 600)
-
+        self.setMinimumSize(1200, 800)
+        self.setWindowIcon(QIcon("Assets/icon1.jpg"))
+        
+        # View cache - store views for reuse
+        self.views = {}
+        
+        self.init_ui()
+    
+    def init_ui(self):
+        """Initialize the main window UI."""
         # Central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-
-        # Left navigation rail
-        nav_widget = QWidget()
-        nav_widget.setFixedWidth(200)
-        nav_widget.setStyleSheet(
-            """
-            QWidget {
-                background-color: #111827;
-            }
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                padding: 12px 16px;
-                text-align: left;
-                color: #9CA3AF;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.05);
-                color: #E6EEF3;
-            }
-            QPushButton:checked {
-                background-color: rgba(20, 184, 166, 0.12);
-                color: #14B8A6;
-            }
-        """
-        )
-        nav_layout = QVBoxLayout(nav_widget)
-        nav_layout.setContentsMargins(0, 0, 0, 0)
-        nav_layout.setSpacing(0)
-
-        # Navigation buttons
-        nav_items = ["Dashboard", "System", "Network Tools", "Reports", "Settings"]
-        self.nav_buttons = []
-        self.views = {}
-
-        for item in nav_items:
-            btn = QPushButton(item)
-            btn.setCheckable(True)
-            btn.clicked.connect(lambda checked, name=item: self.on_nav_clicked(name))
-            nav_layout.addWidget(btn)
-            self.nav_buttons.append(btn)
-
-        # Set first button as checked
-        if self.nav_buttons:
-            self.nav_buttons[0].setChecked(True)
-
-        nav_layout.addStretch()
-
-        # Main content area
-        self.content_widget = QWidget()
-        self.content_widget.setStyleSheet(
-            """
-            QWidget {
-                background-color: #0F1724;
-            }
-        """
-        )
-        self.content_layout = QVBoxLayout(self.content_widget)
-        self.content_layout.setContentsMargins(40, 40, 40, 40)
-
-        # Placeholder content
-        self.content_label = QLabel("Welcome to NetDoctor")
-        self.content_label.setStyleSheet(
-            """
-            QLabel {
-                color: #E6EEF3;
-                font-size: 24px;
-                font-weight: bold;
-            }
-        """
-        )
-        self.content_layout.addWidget(self.content_label)
-
-        # Add widgets to main layout
-        main_layout.addWidget(nav_widget)
-        main_layout.addWidget(self.content_widget, 1)
-
-    def on_nav_clicked(self, name: str):
-        """Handle navigation button clicks."""
-        # Uncheck all buttons
-        for btn in self.nav_buttons:
-            btn.setChecked(False)
-
-        # Check the clicked button
-        for btn in self.nav_buttons:
-            if btn.text() == name:
-                btn.setChecked(True)
-                break
-
-        # Load appropriate view
-        self.load_view(name)
-
-    def load_view(self, view_name: str):
-        """Load a view based on name."""
-        # Clear current content - remove widgets but don't delete cached views
-        while self.content_layout.count():
-            child = self.content_layout.takeAt(0)
-            if child.widget():
-                widget = child.widget()
-                # Only delete if it's not a cached view
-                if widget not in self.views.values():
-                    widget.deleteLater()
-                # Otherwise just remove from layout (widget stays alive)
-
-        # Load view if not already created
-        if view_name not in self.views:
-            if view_name == "System":
-                self.views[view_name] = SystemView()
-            elif view_name == "Network Tools":
-                # Show ping view for Network Tools
-                self.views[view_name] = PingView()
-            elif view_name == "Dashboard":
-                # Dashboard shows ping view (can be enhanced later)
-                self.views[view_name] = PingView()
-            elif view_name == "Port Scan":
-                # Port scan view (can be accessed via Network Tools later)
-                from netdoctor.gui.views.portscan_view import PortScanView
-                self.views[view_name] = PortScanView()
-            else:
-                # Placeholder for other views
-                placeholder = QLabel(f"{view_name} View\n\n(Coming soon)")
-                placeholder.setStyleSheet(
-                    """
-                    QLabel {
-                        color: #E6EEF3;
-                        font-size: 24px;
-                        font-weight: bold;
-                    }
-                """
-                )
-                self.views[view_name] = placeholder
-
-        # Add view to layout
-        view = self.views[view_name]
-        # Check if view is already in the layout
-        already_in_layout = False
-        for i in range(self.content_layout.count()):
-            if self.content_layout.itemAt(i).widget() == view:
-                already_in_layout = True
-                break
         
-        if not already_in_layout:
-            self.content_layout.addWidget(view)
+        # Create sidebar
+        self.sidebar = Sidebar()
+        self.sidebar.page_changed.connect(self.on_page_changed)
+        main_layout.addWidget(self.sidebar)
+        
+        # Create stacked widget for content area
+        self.stacked_widget = QStackedWidget()
+        self.stacked_widget.setObjectName("contentArea")
+        main_layout.addWidget(self.stacked_widget, 1)  # Stretch factor = 1
+        
+        # Initialize views and add to stack
+        self._initialize_views()
+        
+        # Set initial page
+        initial_page = self.sidebar.get_current_page()
+        if initial_page:
+            self.switch_to_page(initial_page)
+    
+    def _initialize_views(self):
+        """Initialize all views and add them to the stacked widget."""
+        # Add Dashboard view
+        dashboard_view = self._get_or_create_view("Dashboard", DashboardView)
+        self.stacked_widget.addWidget(dashboard_view)
+        self.views["Dashboard"] = dashboard_view
+        
+        # Add System view
+        system_view = self._get_or_create_view("System", SystemView)
+        self.stacked_widget.addWidget(system_view)
+        self.views["System"] = system_view
+        
+        # Add Ping view
+        ping_view = self._get_or_create_view("Ping", PingView)
+        self.stacked_widget.addWidget(ping_view)
+        self.views["Ping"] = ping_view
+
+        # Add PortScan view
+        portscan_view = self._get_or_create_view("PortScan", PortScanView)
+        self.stacked_widget.addWidget(portscan_view)
+        self.views["PortScan"] = portscan_view
+        
+        # Add placeholder for Reports
+        reports_view = self._create_placeholder_view("Reports")
+        self.stacked_widget.addWidget(reports_view)
+        self.views["Reports"] = reports_view
+        
+        # Add placeholder for Settings
+        settings_view = self._create_placeholder_view("Settings")
+        self.stacked_widget.addWidget(settings_view)
+        self.views["Settings"] = settings_view
+    
+    def _get_or_create_view(self, page_name: str, view_class):
+        """
+        Get existing view or create new one.
+        
+        Args:
+            page_name: Name of the page
+            view_class: View class to instantiate
+            
+        Returns:
+            View widget instance
+        """
+        if page_name in self.views:
+            return self.views[page_name]
+        
+        view = view_class()
+        return view
+    
+    def _create_placeholder_view(self, page_name: str) -> QWidget:
+        """
+        Create a placeholder view for pages not yet implemented.
+        
+        Args:
+            page_name: Name of the page
+            
+        Returns:
+            Placeholder widget
+        """
+        from netdoctor.gui.widgets.ui_components import SectionHeader, CardContainer
+        from PySide6.QtCore import Qt
+        
+        placeholder = QWidget()
+        layout = QVBoxLayout(placeholder)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(20)
+        
+        # Page header
+        header = SectionHeader(page_name, f"{page_name} view - Coming soon")
+        layout.addWidget(header)
+        
+        # Empty state card
+        empty_card = CardContainer()
+        card_layout = QVBoxLayout(empty_card)
+        card_layout.setSpacing(12)
+        
+        empty_label = QLabel(f"The {page_name} view is under development.\n\nThis feature will be available in a future update.")
+        empty_label.setObjectName("sectionSubtitle")
+        empty_label.setAlignment(Qt.AlignCenter)
+        empty_label.setWordWrap(True)
+        card_layout.addWidget(empty_label)
+        
+        layout.addWidget(empty_card)
+        layout.addStretch()
+        
+        return placeholder
+    
+    def on_page_changed(self, page_name: str):
+        """
+        Handle page change signal from sidebar.
+        
+        Args:
+            page_name: Name of the page to switch to
+        """
+        self.switch_to_page(page_name)
+    
+    def switch_to_page(self, page_name: str):
+        """
+        Switch to the specified page in the stacked widget.
+        
+        Args:
+            page_name: Name of the page to switch to
+        """
+        if page_name not in self.views:
+            # Create placeholder if it doesn't exist
+            placeholder = self._create_placeholder_view(page_name)
+            self.stacked_widget.addWidget(placeholder)
+            self.views[page_name] = placeholder
+        
+        view = self.views[page_name]
+        
+        # Find the index of this view in the stacked widget
+        index = self.stacked_widget.indexOf(view)
+        if index == -1:
+            # View not in stack, add it
+            index = self.stacked_widget.addWidget(view)
+        
+        # Get current view for fade out
+        current_index = self.stacked_widget.currentIndex()
+        current_view = self.stacked_widget.currentWidget() if current_index >= 0 else None
+        
+        # Switch to the page immediately (required for animation to work)
+        self.stacked_widget.setCurrentIndex(index)
+        
+        # Fade in animation for the new view
+        view.setWindowOpacity(0.0)
+        fade_in(view, duration=200)
+        
+        # Update sidebar active state
+        self.sidebar.set_active_page(page_name)
