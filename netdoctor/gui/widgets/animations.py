@@ -239,3 +239,40 @@ def pulse(widget: QWidget, scale: float = 1.05, duration: int = 600, loops: int 
     sequence.start()
     return sequence
 
+def haptic_pop(widget: QWidget, scale: float = 1.05, duration: int = 150):
+    """
+    Subtle 'pop' animation for energetic click feedback.
+    
+    Args:
+        widget: Widget to animate
+        scale: Pop scale factor
+        duration: Animation duration
+    """
+    if not widget:
+        return
+        
+    original_size = widget.size()
+    scaled_size = QSize(int(original_size.width() * scale), int(original_size.height() * scale))
+    
+    pop_up = QPropertyAnimation(widget, b"geometry")
+    pop_up.setDuration(duration // 3)
+    pop_up.setStartValue(widget.geometry())
+    pop_up.setEndValue(QRect(
+        widget.x() - (scaled_size.width() - original_size.width()) // 2,
+        widget.y() - (scaled_size.height() - original_size.height()) // 2,
+        scaled_size.width(),
+        scaled_size.height()
+    ))
+    pop_up.setEasingCurve(QEasingCurve.OutCubic)
+    
+    pop_down = QPropertyAnimation(widget, b"geometry")
+    pop_down.setDuration(duration * 2 // 3)
+    pop_down.setStartValue(pop_up.endValue())
+    pop_down.setEndValue(widget.geometry())
+    pop_down.setEasingCurve(QEasingCurve.OutElastic)
+    
+    sequence = QSequentialAnimationGroup()
+    sequence.addAnimation(pop_up)
+    sequence.addAnimation(pop_down)
+    sequence.start()
+    return sequence

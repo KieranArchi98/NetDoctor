@@ -185,9 +185,9 @@ class MainWindow(QMainWindow):
         # Switch to the page immediately (required for animation to work)
         self.stacked_widget.setCurrentIndex(index)
         
-        # Fade in animation for the new view
-        view.setWindowOpacity(0.0)
-        fade_in(view, duration=200)
+        # Slide and Fade in animation for the new view
+        from netdoctor.gui.widgets.animations import slide_in_from_right
+        slide_in_from_right(view, duration=350)
         
         # Update sidebar active state
         self.sidebar.set_active_page(page_name)

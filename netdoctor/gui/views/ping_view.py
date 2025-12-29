@@ -126,12 +126,12 @@ class PingView(QWidget):
         chart_card_layout.addWidget(chart_header)
 
         self.chart = pg.PlotWidget()
-        self.chart.setBackground("#181825")  # bg_sidebar
-        self.chart.setLabel("left", "RTT (ms)", color="#E4E4E7")  # text_primary
-        self.chart.setLabel("bottom", "Sequence", color="#E4E4E7")  # text_primary
-        self.chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.chart_line = self.chart.plot([], [], pen=pg.mkPen(color="#4A90E2", width=2))  # primary_blue
+        self.chart.setBackground("#1e293b")  # bg_sidebar
+        self.chart.setLabel("left", "RTT (ms)", color="#f1f5f9")  # text_primary
+        self.chart.setLabel("bottom", "Sequence", color="#f1f5f9")  # text_primary
+        self.chart.getAxis("left").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.chart.getAxis("bottom").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.chart_line = self.chart.plot([], [], pen=pg.mkPen(color="#3b82f6", width=2))  # primary_blue
         chart_card_layout.addWidget(self.chart)
 
         results_layout.addWidget(chart_card, 1)

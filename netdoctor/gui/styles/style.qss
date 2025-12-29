@@ -46,13 +46,14 @@ QMainWindow {
 }
 
 /* ===== SIDEBAR ===== */
+/* Make the sidebar match the main/header background and span full height */
 QWidget#sidebar {
-    background-color: #181825;  /* bg_sidebar */
+    background-color: #1E1E2E;  /* bg_main - match header/content background */
     border-right: 1px solid #313244;  /* border */
 }
 
 QWidget#sidebarLogo {
-    background-color: #181825;  /* bg_sidebar */
+    background-color: #1E1E2E;  /* match main/background */
     padding: 20px 16px;
     border-bottom: 1px solid #313244;  /* border */
 }

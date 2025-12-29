@@ -76,13 +76,13 @@ class SystemView(QWidget):
         cpu_chart_layout.addWidget(cpu_chart_label)
 
         self.cpu_chart = pg.PlotWidget()
-        self.cpu_chart.setBackground("#181825")  # bg_sidebar
-        self.cpu_chart.setLabel("left", "Usage (%)", color="#E4E4E7")  # text_primary
-        self.cpu_chart.setLabel("bottom", "Time", color="#E4E4E7")  # text_primary
+        self.cpu_chart.setBackground("#1e293b")  # bg_sidebar
+        self.cpu_chart.setLabel("left", "Usage (%)", color="#f1f5f9")  # text_primary
+        self.cpu_chart.setLabel("bottom", "Time", color="#f1f5f9")  # text_primary
         self.cpu_chart.setYRange(0, 100)
-        self.cpu_chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.cpu_chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.cpu_line = self.cpu_chart.plot([], [], pen=pg.mkPen(color="#4A90E2", width=2))  # primary_blue
+        self.cpu_chart.getAxis("left").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.cpu_chart.getAxis("bottom").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.cpu_line = self.cpu_chart.plot([], [], pen=pg.mkPen(color="#3b82f6", width=2))  # primary_blue
         cpu_chart_layout.addWidget(self.cpu_chart)
 
         charts_layout.addWidget(cpu_chart_card, 1)
@@ -97,13 +97,13 @@ class SystemView(QWidget):
         memory_chart_layout.addWidget(memory_chart_label)
 
         self.memory_chart = pg.PlotWidget()
-        self.memory_chart.setBackground("#181825")  # bg_sidebar
-        self.memory_chart.setLabel("left", "Usage (%)", color="#E4E4E7")  # text_primary
-        self.memory_chart.setLabel("bottom", "Time", color="#E4E4E7")  # text_primary
+        self.memory_chart.setBackground("#1e293b")  # bg_sidebar
+        self.memory_chart.setLabel("left", "Usage (%)", color="#f1f5f9")  # text_primary
+        self.memory_chart.setLabel("bottom", "Time", color="#f1f5f9")  # text_primary
         self.memory_chart.setYRange(0, 100)
-        self.memory_chart.getAxis("left").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.memory_chart.getAxis("bottom").setPen(pg.mkPen(color="#E4E4E7"))  # text_primary
-        self.memory_line = self.memory_chart.plot([], [], pen=pg.mkPen(color="#5BA3F5", width=2))  # secondary_blue
+        self.memory_chart.getAxis("left").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.memory_chart.getAxis("bottom").setPen(pg.mkPen(color="#f1f5f9"))  # text_primary
+        self.memory_line = self.memory_chart.plot([], [], pen=pg.mkPen(color="#60a5fa", width=2))  # secondary_blue
         memory_chart_layout.addWidget(self.memory_chart)
 
         charts_layout.addWidget(memory_chart_card, 1)

@@ -129,9 +129,9 @@ class IconButton(QPushButton):
         self.setFixedSize(32, 32)
     
     def mousePressEvent(self, event):
-        """Handle button press with feedback animation."""
-        from netdoctor.gui.widgets.animations import scale_press
-        scale_press(self, scale=0.9, duration=100)
+        """Handle button press with haptic feedback."""
+        from netdoctor.gui.widgets.animations import haptic_pop
+        haptic_pop(self, scale=1.1, duration=150)
         super().mousePressEvent(event)
 
 

@@ -107,10 +107,16 @@ class StatCard(QWidget):
             title_label.setObjectName("statCardTitle")
             layout.addWidget(title_label)
         
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+    def enterEvent(self, event):
+        """Handle mouse enter for hover effect."""
+        self.setProperty("hover", True)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        super().enterEvent(event)
     
-    def set_value(self, value: str):
-        """Update the value."""
-        value_label = self.findChild(QLabel, "statCardValue")
-        if value_label:
-            value_label.setText(value)
+    def leaveEvent(self, event):
+        """Handle mouse leave for hover effect."""
+        self.setProperty("hover", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        super().leaveEvent(event)
