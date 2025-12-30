@@ -17,6 +17,7 @@ from netdoctor.gui.views.system_view import SystemView
 from netdoctor.gui.views.portscan_view import PortScanView
 from netdoctor.gui.views.dashboard_view import DashboardView
 from netdoctor.gui.views.reports_view import ReportsView
+from netdoctor.gui.views.settings_view import SettingsView
 from netdoctor.gui.widgets.sidebar import Sidebar
 from netdoctor.gui.widgets.animations import fade_in
 
@@ -89,8 +90,8 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(reports_view)
         self.views["Reports"] = reports_view
         
-        # Add placeholder for Settings
-        settings_view = self._create_placeholder_view("Settings")
+        # Add Settings view
+        settings_view = self._get_or_create_view("Settings", SettingsView)
         self.stacked_widget.addWidget(settings_view)
         self.views["Settings"] = settings_view
     

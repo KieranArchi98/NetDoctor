@@ -180,46 +180,4 @@ def scan_ports(
     return sorted(results, key=lambda x: x["port"])
 
 
-def detect_nmap() -> Optional[Dict[str, str]]:
-    """
-    Detect if nmap is installed and return its path and version.
-
-    Returns:
-        Dictionary with 'path' and 'version' keys, or None if nmap not found
-    """
-    # First try to find nmap in PATH
-    nmap_path = shutil.which("nmap")
-    if not nmap_path:
-        return None
-
-    # Try to get version
-    try:
-        result = subprocess.run(
-            [nmap_path, "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        if result.returncode == 0:
-            # Parse version from output (e.g., "Nmap version 7.94")
-            version_match = None
-            for line in result.stdout.split("\n"):
-                if "version" in line.lower():
-                    # Extract version number
-                    import re
-
-                    version_match = re.search(r"version\s+([\d.]+)", line, re.IGNORECASE)
-                    if version_match:
-                        version = version_match.group(1)
-                        return {"path": nmap_path, "version": version}
-            # If we got output but couldn't parse version, still return path
-            return {"path": nmap_path, "version": "unknown"}
-        else:
-            # If nmap command failed, return None (nmap might not work)
-            return None
-    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
-        # If we can't run nmap, return None
-        return None
-
-    return None
+from netdoctor.core.utils import detect_nmap

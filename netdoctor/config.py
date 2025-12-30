@@ -20,3 +20,7 @@ STORAGE_TYPE = "sqlite"  # "sqlite" or "json"
 DB_FILENAME = "netdoctor_history.db"
 JSON_HISTORY_FILENAME = "history.json"
 
+# Settings defaults
+NMAP_PATH = ""
+PRIVACY_ACKNOWLEDGED = False
+

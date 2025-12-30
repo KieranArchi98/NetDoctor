@@ -19,6 +19,8 @@ from PySide6.QtCore import QThreadPool, Qt
 from typing import Optional
 import pyqtgraph as pg
 
+from netdoctor import config
+
 import uuid
 from datetime import datetime
 
@@ -154,6 +156,10 @@ class PingView(QWidget):
         host = self.host_input.text().strip()
         if not host:
             QMessageBox.warning(self, "Error", "Please enter a host to ping")
+            return
+
+        if not config.PRIVACY_ACKNOWLEDGED:
+            QMessageBox.warning(self, "Privacy Warning", "You must acknowledge the privacy/legal terms in Settings before running scans.")
             return
 
         count = self.count_input.value()

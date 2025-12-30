@@ -20,6 +20,7 @@ from typing import Optional
 import uuid
 from datetime import datetime
 
+from netdoctor import config
 from netdoctor.workers.task_worker import TaskWorker, WorkerSignals
 from netdoctor.core import portscanner
 from netdoctor.storage import history
@@ -160,6 +161,10 @@ class PortScanView(QWidget):
         host = self.host_input.text().strip()
         if not host:
             QMessageBox.warning(self, "Error", "Please enter a host to scan")
+            return
+
+        if not config.PRIVACY_ACKNOWLEDGED:
+            QMessageBox.warning(self, "Privacy Warning", "You must acknowledge the privacy/legal terms in Settings before running scans.")
             return
 
         ports = self.port_input.text().strip()
