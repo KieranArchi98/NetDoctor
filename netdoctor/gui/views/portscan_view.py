@@ -17,8 +17,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QThreadPool, Qt
 from typing import Optional
 
+import uuid
+from datetime import datetime
+
 from netdoctor.workers.task_worker import TaskWorker, WorkerSignals
 from netdoctor.core import portscanner
+from netdoctor.storage import history
 from netdoctor.gui.widgets.results_table import ResultsTableView
 from netdoctor.gui.widgets.ui_components import SectionHeader, CardContainer, ModalDialog
 
@@ -240,10 +244,19 @@ class PortScanView(QWidget):
         """Handle scan completion."""
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-        self.host_input.setEnabled(True)
-        self.port_input.setEnabled(True)
         self.thread_input.setEnabled(True)
         self.current_worker = None
+        
+        # Save session to history
+        if self.scan_results:
+            session_id = f"scan_{uuid.uuid4().hex[:8]}"
+            meta = {
+                "tool": "PortScan",
+                "target": self.host_input.text().strip(),
+                "timestamp": datetime.now().isoformat(),
+                "ports": self.port_input.text().strip()
+            }
+            history.save_session(session_id, meta, self.scan_results)
 
     def on_scan_error(self, error_msg: str):
         """Handle scan error."""

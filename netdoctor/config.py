@@ -15,3 +15,8 @@ DEFAULT_PING_SWEEP_THREADS = 10
 DEFAULT_THEME = "dark"
 DEFAULT_REFRESH_RATE = 1000  # milliseconds
 
+# Storage settings
+STORAGE_TYPE = "sqlite"  # "sqlite" or "json"
+DB_FILENAME = "netdoctor_history.db"
+JSON_HISTORY_FILENAME = "history.json"
+
