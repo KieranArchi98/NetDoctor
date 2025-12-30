@@ -3,79 +3,79 @@ Color palette for NetDoctor dark theme.
 Blue-based professional color scheme.
 """
 
-# Dark-mode blue color palette
+# Dark-mode blue color palette (aligned with netdoctor_spec.json)
 PALETTE = {
     # Accent colors
-    "primary_blue": "#4A90E2",  # Primary accent blue - bright, professional
-    "secondary_blue": "#5BA3F5",  # Secondary accent blue - lighter variant
-    "blue_hover": "#6BB6FF",  # Hover state for blue elements
-    "blue_active": "#3A7BC8",  # Active/pressed state
+    "primary_blue": "#3B82F6",  # Spec accent blue
+    "secondary_blue": "#14B8A6",  # Spec accent teal
+    "blue_hover": "#60A5FA",  
+    "blue_active": "#2563EB",  
     
     # Background colors
-    "bg_main": "#1E1E2E",  # Main application background
-    "bg_secondary": "#252538",  # Secondary panels, cards
-    "bg_sidebar": "#181825",  # Sidebar background (darker)
-    "bg_card": "#1F1F2F",  # Card/widget background
-    "bg_elevated": "#2A2A3E",  # Elevated surfaces (hover states)
+    "bg_main": "#0F1724",  # Spec background
+    "bg_secondary": "#111827",  # Spec surface
+    "bg_sidebar": "#0b1220",  # Spec surface alternative
+    "bg_card": "#111827",  
+    "bg_elevated": "#1F2937",  
     
     # Border and divider colors
-    "border": "#313244",  # Standard borders
-    "border_light": "#3E3E52",  # Lighter borders for emphasis
-    "border_focus": "#4A90E2",  # Focused input borders
+    "border": "#2D3748",  
+    "border_light": "#4A5568",  
+    "border_focus": "#3B82F6",  
     
     # Text colors
-    "text_primary": "#E4E4E7",  # Primary text - high contrast
-    "text_secondary": "#A1A1AA",  # Secondary text - medium contrast
-    "text_muted": "#71717A",  # Muted text - low contrast
-    "text_accent": "#4A90E2",  # Accent text color
+    "text_primary": "#E6EEF3",  # Spec primary text
+    "text_secondary": "#9CA3AF",  # Spec muted text
+    "text_muted": "#6B7280",  
+    "text_accent": "#14B8A6",  
     
     # Interactive states
-    "hover": "#2A2A3E",  # General hover background
-    "hover_light": "#313244",  # Light hover overlay
-    "active": "#1F2937",  # Active selection background
-    "active_accent": "#4A90E2",  # Active selection with accent
-    "selection": "rgba(74, 144, 226, 0.15)",  # Selection highlight (transparent blue)
+    "hover": "#1F2937",  
+    "hover_light": "#2D3748",  
+    "active": "#111827",  
+    "active_accent": "#3B82F6",  
+    "selection": "rgba(59, 130, 246, 0.2)",  
     
     # Status colors
-    "error": "#EF4444",  # Error/red
-    "error_hover": "#F87171",  # Error hover state
-    "warning": "#F59E0B",  # Warning/orange
-    "warning_hover": "#FBBF24",  # Warning hover state
-    "success": "#10B981",  # Success/green
-    "success_hover": "#34D399",  # Success hover state
-    "info": "#3B82F6",  # Info blue
-    "info_hover": "#60A5FA",  # Info hover state
+    "error": "#EF4444",  # Spec alert red
+    "error_hover": "#F87171",  
+    "warning": "#F97316",  # Spec alert orange
+    "warning_hover": "#FB923C",  
+    "success": "#10B981",  
+    "success_hover": "#34D399",  
+    "info": "#3B82F6",  
+    "info_hover": "#60A5FA",  
     
     # Specialized UI elements
-    "button_primary": "#4A90E2",  # Primary button background
-    "button_primary_hover": "#5BA3F5",  # Primary button hover
-    "button_primary_text": "#FFFFFF",  # Primary button text
-    "button_secondary": "#313244",  # Secondary button background
-    "button_secondary_hover": "#3E3E52",  # Secondary button hover
-    "button_danger": "#EF4444",  # Danger button background
-    "button_danger_hover": "#F87171",  # Danger button hover
-    "button_disabled": "#1F1F2F",  # Disabled button background
-    "button_disabled_text": "#71717A",  # Disabled button text
+    "button_primary": "#3B82F6",  
+    "button_primary_hover": "#2563EB",  
+    "button_primary_text": "#FFFFFF",  
+    "button_secondary": "#1F2937",  
+    "button_secondary_hover": "#374151",  
+    "button_danger": "#EF4444",  
+    "button_danger_hover": "#DC2626",  
+    "button_disabled": "#111827",  
+    "button_disabled_text": "#4B5563",  
     
     # Input fields
-    "input_bg": "#181825",  # Input background
-    "input_border": "#313244",  # Input border
-    "input_focus": "#4A90E2",  # Input focus border
-    "input_text": "#E4E4E7",  # Input text color
-    "input_placeholder": "#71717A",  # Placeholder text
+    "input_bg": "#0b1220",  
+    "input_border": "#2D3748",  
+    "input_focus": "#3B82F6",  
+    "input_text": "#E6EEF3",  
+    "input_placeholder": "#6B7280",  
     
     # Table/List
-    "table_header": "#181825",  # Table header background
-    "table_header_text": "#4A90E2",  # Table header text
-    "table_row_even": "#1F1F2F",  # Even row background
-    "table_row_odd": "#181825",  # Odd row background
-    "table_border": "#313244",  # Table borders
-    "table_selection": "rgba(74, 144, 226, 0.2)",  # Selected row
+    "table_header": "#0b1220",  
+    "table_header_text": "#14B8A6",  
+    "table_row_even": "#111827",  
+    "table_row_odd": "#0F1724",  
+    "table_border": "#2D3748",  
+    "table_selection": "rgba(59, 130, 246, 0.2)",  
     
     # Scrollbar
-    "scrollbar_bg": "#181825",  # Scrollbar background
-    "scrollbar_handle": "#313244",  # Scrollbar handle
-    "scrollbar_handle_hover": "#3E3E52",  # Scrollbar handle hover
+    "scrollbar_bg": "#0b1220",  
+    "scrollbar_handle": "#2D3748",  
+    "scrollbar_handle_hover": "#4A5568",  
 }
 
 

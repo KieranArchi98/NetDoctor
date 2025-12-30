@@ -107,11 +107,18 @@ class DashboardView(QWidget):
         tables_layout = QHBoxLayout()
         tables_layout.setSpacing(16)
 
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+
         # Table 1: Top Applications (User)
         apps_container = QWidget()
         apps_layout = QVBoxLayout(apps_container)
         apps_layout.setContentsMargins(0, 0, 0, 0)
-        apps_header = SectionHeader("Top Applications", "User processes by usage")
+        apps_header = SectionHeader(
+            "Top Applications", 
+            "User processes by usage",
+            icon_path=str(icon_dir / "system.svg")
+        )
         apps_layout.addWidget(apps_header)
         
         self.app_table = self._create_process_table()
@@ -122,7 +129,11 @@ class DashboardView(QWidget):
         procs_container = QWidget()
         procs_layout = QVBoxLayout(procs_container)
         procs_layout.setContentsMargins(0, 0, 0, 0)
-        procs_header = SectionHeader("System Processes", "Background services by usage")
+        procs_header = SectionHeader(
+            "System Processes", 
+            "Background services by usage",
+            icon_path=str(icon_dir / "system.svg")
+        )
         procs_layout.addWidget(procs_header)
         
         self.proc_table = self._create_process_table()

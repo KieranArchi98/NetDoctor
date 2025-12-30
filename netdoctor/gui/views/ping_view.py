@@ -46,8 +46,15 @@ class PingView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
 
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+
         # Page header
-        header = SectionHeader("Ping Tool", "Test network connectivity and measure latency")
+        header = SectionHeader(
+            "Ping Tool", 
+            "Test network connectivity and measure latency",
+            icon_path=str(icon_dir / "ping.svg")
+        )
         header.add_action_button("Export CSV", self.export_csv, "secondary")
         layout.addWidget(header)
 
@@ -272,6 +279,7 @@ class PingView(QWidget):
                                 "error": result.get("error", ""),
                             }
                         )
-                QMessageBox.information(self, "Success", f"Results exported to {filename}")
+                if self.window() and hasattr(self.window(), "show_toast"):
+                    self.window().show_toast(f"Results exported to {Path(filename).name}", "success")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to export: {str(e)}")

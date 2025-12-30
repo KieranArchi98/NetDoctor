@@ -72,13 +72,21 @@ class SectionHeader(QWidget):
         header.add_action_button("Action", callback_function)
     """
     
-    def __init__(self, title: str, subtitle: str = "", parent=None):
+    def __init__(self, title: str, subtitle: str = "", icon_path: str = "", parent=None):
         super().__init__(parent)
         self.setObjectName("sectionHeader")
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(16)
+        
+        # Icon
+        if icon_path:
+            self.icon = QLabel()
+            from PySide6.QtGui import QIcon
+            pixmap = QIcon(icon_path).pixmap(32, 32)
+            self.icon.setPixmap(pixmap)
+            layout.addWidget(self.icon)
         
         # Title section
         title_layout = QVBoxLayout()
@@ -137,84 +145,72 @@ class IconButton(QPushButton):
 
 class ToastNotification(QWidget):
     """
-    Slide-in toast notification widget.
-    
-    Example:
-        toast = ToastNotification("Operation completed!", parent=main_window)
-        toast.show_toast()
+    Refined slide-in toast notification widget.
     """
     
-    def __init__(self, message: str, toast_type: str = "info", duration: int = 3000, parent=None):
+    def __init__(self, message: str, toast_type: str = "info", duration: int = 4000, parent=None):
         super().__init__(parent)
         self.setObjectName(f"toast_{toast_type}")
         self.duration = duration
-        self.message = message
         
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        # Transparent background for the widget itself, styling applied to frame
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.SubWindow | Qt.FramelessWindowHint)
         
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(15, 10, 15, 10)
         
-        label = QLabel(message)
-        label.setObjectName("toastMessage")
-        layout.addWidget(label)
+        self.icon_label = QLabel()
+        from PySide6.QtGui import QIcon
+        # Simple mapping for internal icons or use characters
+        icons = {"success": "✅", "error": "❌", "info": "ℹ️", "warning": "⚠️"}
+        self.icon_label.setText(icons.get(toast_type, "ℹ️"))
+        layout.addWidget(self.icon_label)
         
-        close_btn = IconButton("✕", "Close")
-        close_btn.clicked.connect(self.hide)
-        layout.addWidget(close_btn)
+        self.message_label = QLabel(message)
+        self.message_label.setObjectName("toastMessage")
+        self.message_label.setWordWrap(True)
+        layout.addWidget(self.message_label, 1)
         
-        # Start hidden
-        self.hide()
-    
-    def show_toast(self, position: Optional[QPoint] = None):
-        """Show the toast notification with slide-in animation."""
-        # Ensure widget has proper size
+        self.setFixedWidth(320)
         self.adjustSize()
-        toast_width = self.width() if self.width() > 0 else 300
-        toast_height = self.height() if self.height() > 0 else 60
         
-        if self.parent():
-            parent_rect = self.parent().geometry()
-            if position is None:
-                position = QPoint(
-                    parent_rect.right() - toast_width - 20,
-                    parent_rect.top() + 20
-                )
-        else:
-            if position is None:
-                position = QPoint(100, 100)
+    def show_toast(self):
+        """Play slide-in animation."""
+        if not self.parent():
+            self.show()
+            return
+            
+        parent_rect = self.parent().rect()
+        margin = 20
+        end_pos = QPoint(parent_rect.width() - self.width() - margin, margin)
+        start_pos = QPoint(parent_rect.width(), margin)
         
-        # Slide-in animation
-        start_rect = QRect(position.x() + toast_width, position.y(), toast_width, toast_height)
-        end_rect = QRect(position.x(), position.y(), toast_width, toast_height)
-        
-        self.setGeometry(start_rect)
+        self.move(start_pos)
         self.show()
         
-        animation = QPropertyAnimation(self, b"geometry")
-        animation.setDuration(300)
-        animation.setEasingCurve(QEasingCurve.OutCubic)
-        animation.setStartValue(start_rect)
-        animation.setEndValue(end_rect)
-        animation.start()
+        self.animation = QPropertyAnimation(self, b"pos")
+        self.animation.setDuration(400)
+        self.animation.setEasingCurve(QEasingCurve.OutExpo)
+        self.animation.setStartValue(start_pos)
+        self.animation.setEndValue(end_pos)
+        self.animation.start()
         
-        # Auto-hide timer
+        # Timer for hiding
         QTimer.singleShot(self.duration, self.hide_toast)
-    
-    def hide_toast(self):
-        """Hide the toast with slide-out animation."""
-        current_rect = self.geometry()
-        toast_width = current_rect.width()
-        end_rect = QRect(current_rect.x() + toast_width, current_rect.y(), toast_width, current_rect.height())
         
-        animation = QPropertyAnimation(self, b"geometry")
-        animation.setDuration(200)
-        animation.setEasingCurve(QEasingCurve.InCubic)
-        animation.setStartValue(current_rect)
-        animation.setEndValue(end_rect)
-        animation.finished.connect(self.hide)
-        animation.start()
+    def hide_toast(self):
+        """Play slide-out animation."""
+        current_pos = self.pos()
+        end_pos = QPoint(self.parent().width(), current_pos.y())
+        
+        self.hide_anim = QPropertyAnimation(self, b"pos")
+        self.hide_anim.setDuration(300)
+        self.hide_anim.setEasingCurve(QEasingCurve.InExpo)
+        self.hide_anim.setStartValue(current_pos)
+        self.hide_anim.setEndValue(end_pos)
+        self.hide_anim.finished.connect(self.deleteLater)
+        self.hide_anim.start()
 
 
 class ModalDialog(QDialog):

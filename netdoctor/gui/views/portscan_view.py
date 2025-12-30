@@ -66,8 +66,15 @@ class PortScanView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
 
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+
         # Page header
-        header = SectionHeader("Port Scanner", "Scan TCP ports and retrieve service banners")
+        header = SectionHeader(
+            "Port Scanner", 
+            "Scan TCP ports and retrieve service banners",
+            icon_path=str(icon_dir / "portscan.svg")
+        )
         layout.addWidget(header)
 
         # Input section in card
@@ -141,7 +148,11 @@ class PortScanView(QWidget):
         layout.addWidget(input_card)
 
         # Results section
-        results_section = SectionHeader("Scan Results", "Discovered open ports and services")
+        results_section = SectionHeader(
+            "Scan Results", 
+            "Discovered open ports and services",
+            icon_path=str(icon_dir / "portscan.svg")
+        )
         layout.addWidget(results_section)
 
         # Results table in card
@@ -251,6 +262,9 @@ class PortScanView(QWidget):
         self.stop_button.setEnabled(False)
         self.thread_input.setEnabled(True)
         self.current_worker = None
+        
+        if self.scan_results and self.window() and hasattr(self.window(), "show_toast"):
+            self.window().show_toast(f"Scan complete: {len(self.scan_results)} open ports found", "success")
         
         # Save session to history
         if self.scan_results:

@@ -27,8 +27,15 @@ class SettingsView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
         
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+        
         # Header
-        header = SectionHeader("Settings", "Configure application behavior and manage dependencies")
+        header = SectionHeader(
+            "Settings", 
+            "Configure application behavior and manage dependencies",
+            icon_path=str(icon_dir / "settings.svg")
+        )
         header.add_action_button("Save Settings", self.save_settings, "primary")
         layout.addWidget(header)
         
@@ -160,12 +167,21 @@ class SettingsView(QWidget):
 
     def load_settings(self):
         """Load settings from QSettings or defaults and update config."""
-        ping_to = int(self.settings.value("ping_timeout", config.DEFAULT_PING_TIMEOUT))
-        ps_to = int(self.settings.value("port_scan_timeout", config.DEFAULT_PORT_SCAN_TIMEOUT))
-        threads = int(self.settings.value("port_threads", config.DEFAULT_PORT_SCAN_THREADS))
-        nmap_p = self.settings.value("nmap_path", "")
+        def get_int_value(key, default):
+            val = self.settings.value(key, default)
+            try:
+                # Handle possible string floats like "1.0"
+                return int(float(val))
+            except (ValueError, TypeError, AttributeError):
+                return int(default)
+
+        ping_to = get_int_value("ping_timeout", config.DEFAULT_PING_TIMEOUT)
+        ps_to = get_int_value("port_scan_timeout", config.DEFAULT_PORT_SCAN_TIMEOUT)
+        threads = get_int_value("port_threads", config.DEFAULT_PORT_SCAN_THREADS)
+        theme_idx = get_int_value("theme_idx", 0)
+        
+        nmap_p = str(self.settings.value("nmap_path", ""))
         privacy_ack = self.settings.value("privacy_acknowledged", "false") == "true"
-        theme_idx = int(self.settings.value("theme_idx", 0))
 
         # Update UI
         self.ping_timeout.setValue(ping_to)
@@ -176,9 +192,9 @@ class SettingsView(QWidget):
         self.privacy_check.setChecked(privacy_ack)
 
         # Update global config for runtime use
-        config.DEFAULT_PING_TIMEOUT = ping_to
-        config.DEFAULT_PORT_SCAN_TIMEOUT = ps_to
-        config.DEFAULT_PORT_SCAN_THREADS = threads
+        config.DEFAULT_PING_TIMEOUT = float(ping_to)
+        config.DEFAULT_PORT_SCAN_TIMEOUT = float(ps_to)
+        config.DEFAULT_PORT_SCAN_THREADS = int(threads)
         config.NMAP_PATH = nmap_p
         config.PRIVACY_ACKNOWLEDGED = privacy_ack
 
@@ -198,4 +214,5 @@ class SettingsView(QWidget):
         config.NMAP_PATH = self.nmap_path_input.text().strip()
         config.PRIVACY_ACKNOWLEDGED = self.privacy_check.isChecked()
         
-        QMessageBox.information(self, "Success", "Settings saved successfully.")
+        if self.window() and hasattr(self.window(), "show_toast"):
+            self.window().show_toast("Settings saved successfully", "success")

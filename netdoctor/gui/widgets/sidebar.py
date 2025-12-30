@@ -35,17 +35,21 @@ class ActiveIndicator(QWidget):
 
 
 class NavigationButton(QPushButton):
-    """Reusable navigation button with icon and text."""
+    """Reusable navigation button with SVG icon and text."""
 
-    def __init__(self, icon: str, text: str, parent=None):
+    def __init__(self, icon_path: str, text: str, parent=None):
         super().__init__(parent)
-        self.icon_text = icon
+        self.icon_path = icon_path
         self.button_text = text
         self.setObjectName("navButton")
         self.setCheckable(True)
-        self.setText(f"{icon}    {text}")
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(45)
+        self.setFixedHeight(50)
+        
+        # Set SVG icon
+        self.setIcon(QIcon(icon_path))
+        self.setIconSize(QSize(20, 20))
+        self.setText(f"   {text}")
     
     def mousePressEvent(self, event):
         """Handle button press with haptic pop feedback."""
@@ -103,13 +107,16 @@ class Sidebar(QWidget):
         # Active Indicator
         self.indicator = ActiveIndicator(self.nav_container)
         
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+        
         self.add_navigation_items([
-            ("▦", "Dashboard"),
-            ("⇄", "Ping"),
-            ("⌖", "PortScan"),
-            ("🖳", "System"),
-            ("🗎", "Reports"),
-            ("⚙", "Settings"),
+            (str(icon_dir / "dashboard.svg"), "Dashboard"),
+            (str(icon_dir / "ping.svg"), "Ping"),
+            (str(icon_dir / "portscan.svg"), "PortScan"),
+            (str(icon_dir / "system.svg"), "System"),
+            (str(icon_dir / "reports.svg"), "Reports"),
+            (str(icon_dir / "settings.svg"), "Settings"),
         ])
         
         
@@ -121,26 +128,28 @@ class Sidebar(QWidget):
         if hasattr(self, "_background") and self._background:
             self._background.setGeometry(self.rect())
         
+    def animate_in(self, duration: int = 500):
+        """Slide-in animation from left."""
+        self.animation = QPropertyAnimation(self, b"pos")
+        self.animation.setDuration(duration)
+        self.animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.animation.setStartValue(QPoint(-self.width(), self.y()))
+        self.animation.setEndValue(QPoint(0, self.y()))
+        self.animation.start()
+
     def _create_logo_section(self) -> QWidget:
         logo_widget = QWidget()
         logo_widget.setObjectName("sidebarLogo")
-        logo_layout = QVBoxLayout(logo_widget)  # Vertical for single logo centering
-        logo_layout.setContentsMargins(10, 30, 10, 30)
-        logo_layout.setSpacing(0)
+        logo_layout = QVBoxLayout(logo_widget)
+        logo_layout.setContentsMargins(20, 30, 20, 30)
         
-        # Icon/Logo
-        self.logo_icon = QLabel()
-        self.logo_icon.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap("Assets/temp2.png")
-        if not pixmap.isNull():
-            # Use a larger size for the main logo
-            self.logo_icon.setPixmap(pixmap.scaled(200, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        else:
-            # Fallback if image not found
-            self.logo_icon.setText("NetDoctor")
-            self.logo_icon.setStyleSheet("font-weight: 800; font-size: 20px; color: #3b82f6;")
-            
-        logo_layout.addWidget(self.logo_icon)
+        self.logo_label = QLabel("NetDoctor")
+        self.logo_label.setStyleSheet("font-weight: 900; font-size: 24px; color: #3B82F6;")
+        logo_layout.addWidget(self.logo_label)
+        
+        self.logo_tagline = QLabel("Diagnostic Toolkit")
+        self.logo_tagline.setObjectName("sectionSubtitle")
+        logo_layout.addWidget(self.logo_tagline)
         
         return logo_widget
     
@@ -168,11 +177,6 @@ class Sidebar(QWidget):
             active = self.button_page_map.get(btn) == page_name
             btn.setChecked(active)
             if active:
-                # Update indicator position
-                # We need to wait for layout to be ready, but for now we can estimate
-                # or use button geometry if already shown.
-                # Adding a small delay or using QTimer/event loop might be safer
-                # but let's try direct move first.
                 target_y = btn.y() + (btn.height() - self.indicator.height()) // 2
                 self.indicator.move_to(target_y)
     
@@ -192,7 +196,7 @@ class Sidebar(QWidget):
         self.setFixedWidth(80)
         self.indicator.hide()
         for btn in self.nav_buttons:
-            btn.setText(btn.icon_text)
+            btn.setText("") # Simple collapse: hide text
             btn.setFixedWidth(60)
         self.logo_widget.hide()
     
@@ -203,7 +207,7 @@ class Sidebar(QWidget):
         self.setFixedWidth(260)
         self.indicator.show()
         for btn in self.nav_buttons:
-            btn.setText(f"{btn.icon_text}    {btn.button_text}")
+            btn.setText(f"   {btn.button_text}")
             btn.setFixedWidth(-1)
         self.logo_widget.show()
 

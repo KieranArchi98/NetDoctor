@@ -29,8 +29,15 @@ class ReportsView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
         
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+        
         # Header
-        self.header = SectionHeader("Reports & History", "View saved diagnostic sessions and export reports")
+        self.header = SectionHeader(
+            "Reports & History", 
+            "View saved diagnostic sessions and export reports",
+            icon_path=str(icon_dir / "reports.svg")
+        )
         self.header.add_action_button("Refresh", self.refresh_sessions, "secondary")
         layout.addWidget(self.header)
         
@@ -105,6 +112,9 @@ class ReportsView(QWidget):
             self.table.setItem(row_idx, 3, QTableWidgetItem(session.get("target", "")))
             
         self.on_selection_changed()
+        
+        if self.window() and hasattr(self.window(), "show_toast"):
+            self.window().show_toast(f"Refreshed {len(sessions)} sessions", "info")
 
     def on_selection_changed(self):
         """Handle selection change in the table."""
@@ -151,7 +161,8 @@ class ReportsView(QWidget):
                 content = report.export_csv(self.current_session)
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(content)
-                QMessageBox.information(self, "Success", f"Report saved to {filename}")
+                if self.window() and hasattr(self.window(), "show_toast"):
+                    self.window().show_toast(f"Report saved: {os.path.basename(filename)}", "success")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save report: {str(e)}")
 
@@ -171,6 +182,7 @@ class ReportsView(QWidget):
                 content = report.export_json(self.current_session)
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(content)
-                QMessageBox.information(self, "Success", f"Report saved to {filename}")
+                if self.window() and hasattr(self.window(), "show_toast"):
+                    self.window().show_toast(f"Report saved: {os.path.basename(filename)}", "success")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save report: {str(e)}")

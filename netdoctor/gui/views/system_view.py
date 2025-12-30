@@ -39,8 +39,15 @@ class SystemView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
 
+        from pathlib import Path
+        icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
+
         # Page header with controls
-        header = SectionHeader("System Overview", "Monitor system resources and network interfaces")
+        header = SectionHeader(
+            "System Overview", 
+            "Monitor system resources and network interfaces",
+            icon_path=str(icon_dir / "system.svg")
+        )
         self.stop_monitoring_button = header.add_action_button("Stop Monitoring", self.stop_monitoring, "danger")
         self.stop_monitoring_button.setEnabled(False)
         self.start_monitoring_button = header.add_action_button("Start Monitoring", self.start_monitoring, "primary")
@@ -111,7 +118,11 @@ class SystemView(QWidget):
         layout.addLayout(charts_layout)
 
         # Network interfaces section
-        interfaces_section = SectionHeader("Network Interfaces", "Active network adapters and statistics")
+        interfaces_section = SectionHeader(
+            "Network Interfaces", 
+            "Active network adapters and statistics",
+            icon_path=str(icon_dir / "system.svg")
+        )
         layout.addWidget(interfaces_section)
 
         # Interfaces table in card
@@ -198,6 +209,9 @@ class SystemView(QWidget):
         self.refresh_timer.timeout.connect(self.update_monitoring)
         self.refresh_timer.start(1000)  # 1 second
 
+        if self.window() and hasattr(self.window(), "show_toast"):
+            self.window().show_toast("Live monitoring started", "success")
+
         # Initial update
         self.update_monitoring()
 
@@ -211,6 +225,9 @@ class SystemView(QWidget):
             self.start_monitoring_button.setEnabled(True)
         if self.stop_monitoring_button:
             self.stop_monitoring_button.setEnabled(False)
+            
+        if self.window() and hasattr(self.window(), "show_toast"):
+            self.window().show_toast("Monitoring stopped", "info")
 
     def update_monitoring(self):
         """Update monitoring data."""

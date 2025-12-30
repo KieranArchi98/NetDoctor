@@ -58,6 +58,9 @@ class MainWindow(QMainWindow):
         # Initialize views and add to stack
         self._initialize_views()
         
+        # Animate sidebar in
+        self.sidebar.animate_in(600)
+        
         # Set initial page
         initial_page = self.sidebar.get_current_page()
         if initial_page:
@@ -159,6 +162,12 @@ class MainWindow(QMainWindow):
         """
         self.switch_to_page(page_name)
     
+    def show_toast(self, message: str, toast_type: str = "info", duration: int = 4000):
+        """Show a sliding toast notification."""
+        from netdoctor.gui.widgets.ui_components import ToastNotification
+        toast = ToastNotification(message, toast_type, duration, self)
+        toast.show_toast()
+
     def switch_to_page(self, page_name: str):
         """
         Switch to the specified page in the stacked widget.
