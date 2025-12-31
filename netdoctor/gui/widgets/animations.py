@@ -61,14 +61,9 @@ def fade_out(widget: QWidget, duration: int = 150, on_finished: Optional[Callabl
     return animation
 
 
-def slide_in_from_right(widget: QWidget, duration: int = 250, on_finished: Optional[Callable] = None):
+def slide_in_from_right(widget: QWidget, duration: int = 200, on_finished: Optional[Callable] = None):
     """
     Slide in animation from the right side.
-    
-    Args:
-        widget: Widget to animate
-        duration: Animation duration in ms
-        on_finished: Optional callback when animation completes
     """
     if not widget:
         return
@@ -78,7 +73,7 @@ def slide_in_from_right(widget: QWidget, duration: int = 250, on_finished: Optio
         return
     
     end_pos = widget.pos()
-    start_pos = QPoint(parent.width(), end_pos.y())
+    start_pos = QPoint(parent.width() // 8, end_pos.y()) # Shorter slide
     
     widget.move(start_pos)
     
@@ -88,7 +83,6 @@ def slide_in_from_right(widget: QWidget, duration: int = 250, on_finished: Optio
     animation.setEndValue(end_pos)
     animation.setEasingCurve(QEasingCurve.OutCubic)
     
-    # Also fade in
     fade_anim = QPropertyAnimation(widget, b"windowOpacity")
     fade_anim.setDuration(duration)
     fade_anim.setStartValue(0.0)
@@ -106,14 +100,9 @@ def slide_in_from_right(widget: QWidget, duration: int = 250, on_finished: Optio
     return group
 
 
-def slide_out_to_left(widget: QWidget, duration: int = 200, on_finished: Optional[Callable] = None):
+def slide_out_to_left(widget: QWidget, duration: int = 150, on_finished: Optional[Callable] = None):
     """
     Slide out animation to the left side.
-    
-    Args:
-        widget: Widget to animate
-        duration: Animation duration in ms
-        on_finished: Optional callback when animation completes
     """
     if not widget:
         return
@@ -123,7 +112,7 @@ def slide_out_to_left(widget: QWidget, duration: int = 200, on_finished: Optiona
         return
     
     start_pos = widget.pos()
-    end_pos = QPoint(-widget.width(), start_pos.y())
+    end_pos = QPoint(-widget.width() // 8, start_pos.y()) # Shorter slide
     
     animation = QPropertyAnimation(widget, b"pos")
     animation.setDuration(duration)
@@ -131,7 +120,6 @@ def slide_out_to_left(widget: QWidget, duration: int = 200, on_finished: Optiona
     animation.setEndValue(end_pos)
     animation.setEasingCurve(QEasingCurve.InCubic)
     
-    # Also fade out
     fade_anim = QPropertyAnimation(widget, b"windowOpacity")
     fade_anim.setDuration(duration)
     fade_anim.setStartValue(1.0)
@@ -149,23 +137,66 @@ def slide_out_to_left(widget: QWidget, duration: int = 200, on_finished: Optiona
     return group
 
 
-def scale_press(widget: QWidget, scale: float = 0.95, duration: int = 100):
+def cross_fade_slide(old_widget: Optional[QWidget], new_widget: QWidget, duration: int = 180):
     """
-    Button press feedback animation with scale effect.
+    Professional page transition: focus on fade with minimal horizontal movement.
+    """
+    group = QParallelAnimationGroup()
     
-    Args:
-        widget: Widget to animate (usually a button)
-        scale: Scale factor (0.95 = 5% smaller)
-        duration: Animation duration in ms
+    if old_widget:
+        start_pos_old = old_widget.pos()
+        end_pos_old = QPoint(-20, start_pos_old.y()) # Subtle movement
+        
+        slide_old = QPropertyAnimation(old_widget, b"pos")
+        slide_old.setDuration(duration)
+        slide_old.setStartValue(start_pos_old)
+        slide_old.setEndValue(end_pos_old)
+        slide_old.setEasingCurve(QEasingCurve.OutCubic)
+        
+        fade_old = QPropertyAnimation(old_widget, b"windowOpacity")
+        fade_old.setDuration(duration)
+        fade_old.setStartValue(1.0)
+        fade_old.setEndValue(0.0)
+        fade_old.setEasingCurve(QEasingCurve.OutCubic)
+        
+        group.addAnimation(slide_old)
+        group.addAnimation(fade_old)
+        
+    # New widget entry
+    end_pos_new = QPoint(0, 0)
+    start_pos_new = QPoint(20, 0) # Subtle movement
+    
+    new_widget.move(start_pos_new)
+    
+    slide_new = QPropertyAnimation(new_widget, b"pos")
+    slide_new.setDuration(duration)
+    slide_new.setStartValue(start_pos_new)
+    slide_new.setEndValue(end_pos_new)
+    slide_new.setEasingCurve(QEasingCurve.OutCubic)
+    
+    fade_new = QPropertyAnimation(new_widget, b"windowOpacity")
+    fade_new.setDuration(duration)
+    fade_new.setStartValue(0.0)
+    fade_new.setEndValue(1.0)
+    fade_new.setEasingCurve(QEasingCurve.OutCubic)
+    
+    group.addAnimation(slide_new)
+    group.addAnimation(fade_new)
+    
+    group.start()
+    return group
+
+
+def scale_press(widget: QWidget, scale: float = 0.98, duration: int = 120):
+    """
+    Subtle button press feedback.
     """
     if not widget:
         return
     
-    # Store original size
     original_size = widget.size()
     scaled_size = QSize(int(original_size.width() * scale), int(original_size.height() * scale))
     
-    # Scale down
     scale_down = QPropertyAnimation(widget, b"geometry")
     scale_down.setDuration(duration // 2)
     scale_down.setStartValue(widget.geometry())
@@ -175,9 +206,8 @@ def scale_press(widget: QWidget, scale: float = 0.95, duration: int = 100):
         scaled_size.width(),
         scaled_size.height()
     ))
-    scale_down.setEasingCurve(QEasingCurve.InOutQuad)
+    scale_down.setEasingCurve(QEasingCurve.OutCubic)
     
-    # Scale back up
     scale_up = QPropertyAnimation(widget, b"geometry")
     scale_up.setDuration(duration // 2)
     scale_up.setStartValue(scale_down.endValue())

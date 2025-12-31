@@ -24,8 +24,8 @@ class SettingsView(QWidget):
     def init_ui(self):
         """Initialize the UI layout."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(20)
+        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setSpacing(24)
         
         from pathlib import Path
         icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
@@ -50,71 +50,117 @@ class SettingsView(QWidget):
         content_layout.setSpacing(24)
         
         # --- General Settings Section ---
-        general_card = CardContainer(hover_elevation=False)
+        general_card = CardContainer()
         general_layout = QVBoxLayout(general_card)
-        general_layout.addWidget(QLabel("<b>General Settings</b>"))
+        general_layout.setContentsMargins(24, 24, 24, 24)
+        general_layout.setSpacing(20)
+        
+        general_label = QLabel("GENERAL SETTINGS")
+        general_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px;")
+        general_layout.addWidget(general_label)
         
         # Timeouts
-        timeout_grid = QHBoxLayout()
-        self.ping_timeout = self._add_setting_row("Ping Timeout (s):", QSpinBox(), general_layout)
+        self.ping_timeout = self._add_setting_row("Ping Timeout (s)", QSpinBox(), general_layout)
         self.ping_timeout.setRange(1, 30)
         
-        self.port_scan_timeout = self._add_setting_row("Port Scan Timeout (s):", QSpinBox(), general_layout)
+        self.port_scan_timeout = self._add_setting_row("Port Scan Timeout (s)", QSpinBox(), general_layout)
         self.port_scan_timeout.setRange(1, 30)
         
         # Concurrency
-        self.port_threads = self._add_setting_row("Port Scan Threads:", QSpinBox(), general_layout)
+        self.port_threads = self._add_setting_row("Port Scan Threads", QSpinBox(), general_layout)
         self.port_threads.setRange(1, 500)
         
         content_layout.addWidget(general_card)
         
         # --- Appearance Section ---
-        appearance_card = CardContainer(hover_elevation=False)
+        appearance_card = CardContainer()
         appearance_layout = QVBoxLayout(appearance_card)
-        appearance_layout.addWidget(QLabel("<b>Appearance</b>"))
+        appearance_layout.setContentsMargins(24, 24, 24, 24)
+        appearance_layout.setSpacing(20)
         
-        self.theme_combo = self._add_setting_row("Theme:", QComboBox(), appearance_layout)
+        appearance_label = QLabel("APPEARANCE")
+        appearance_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px;")
+        appearance_layout.addWidget(appearance_label)
+        
+        self.theme_combo = self._add_setting_row("Theme Preference", QComboBox(), appearance_layout)
         self.theme_combo.addItems(["Dark (Default)", "Light"])
+        self.theme_combo.setMinimumWidth(150)
         
         content_layout.addWidget(appearance_card)
         
         # --- External Tools Section ---
-        tools_card = CardContainer(hover_elevation=False)
+        tools_card = CardContainer()
         tools_layout = QVBoxLayout(tools_card)
-        tools_layout.addWidget(QLabel("<b>External Tools</b>"))
+        tools_layout.setContentsMargins(24, 24, 24, 24)
+        tools_layout.setSpacing(20)
         
-        nmap_layout = QHBoxLayout()
+        tools_label = QLabel("EXTERNAL TOOLS")
+        tools_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px;")
+        tools_layout.addWidget(tools_label)
+        
+        nmap_row = QVBoxLayout()
+        nmap_row.setSpacing(8)
+        nmap_label = QLabel("Nmap Executable Path")
+        nmap_label.setStyleSheet("color: #94a3b8; font-size: 13px;")
+        
+        nmap_input_layout = QHBoxLayout()
+        nmap_input_layout.setSpacing(12)
         self.nmap_path_input = QLineEdit()
         self.nmap_path_input.setPlaceholderText("Auto-detected or custom path")
-        nmap_btn = QPushButton("Browse")
-        nmap_btn.clicked.connect(self.browse_nmap)
-        nmap_layout.addWidget(self.nmap_path_input)
-        nmap_layout.addWidget(nmap_btn)
+        self.nmap_path_input.setFixedHeight(40)
         
-        tools_layout.addWidget(QLabel("Nmap Path:"))
-        tools_layout.addLayout(nmap_layout)
+        nmap_btn = QPushButton("Browse")
+        nmap_btn.setObjectName("secondaryButton")
+        nmap_btn.setFixedHeight(40)
+        nmap_btn.setFixedWidth(100)
+        nmap_btn.clicked.connect(self.browse_nmap)
+        
+        nmap_input_layout.addWidget(self.nmap_path_input)
+        nmap_input_layout.addWidget(nmap_btn)
+        
+        nmap_row.addWidget(nmap_label)
+        nmap_row.addLayout(nmap_input_layout)
+        tools_layout.addLayout(nmap_row)
         
         content_layout.addWidget(tools_card)
         
         # --- Dependencies Section ---
-        dep_card = CardContainer(hover_elevation=False)
+        dep_card = CardContainer()
         dep_layout = QVBoxLayout(dep_card)
-        dep_layout.addWidget(QLabel("<b>Dependency Status</b>"))
+        dep_layout.setContentsMargins(24, 24, 24, 24)
+        dep_layout.setSpacing(20)
+        
+        dep_header = QHBoxLayout()
+        dep_label = QLabel("DEPENDENCY STATUS")
+        dep_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px;")
+        dep_header.addWidget(dep_label)
+        dep_header.addStretch()
+        
+        refresh_dep_btn = QPushButton("Refresh")
+        refresh_dep_btn.setObjectName("secondaryButton")
+        refresh_dep_btn.setFixedWidth(80)
+        refresh_dep_btn.clicked.connect(self.refresh_dependencies)
+        dep_header.addWidget(refresh_dep_btn)
+        
+        dep_layout.addLayout(dep_header)
         
         self.dep_status_label = QLabel("Detecting...")
         self.dep_status_label.setWordWrap(True)
+        self.dep_status_label.setStyleSheet("color: #e2e8f0; line-height: 1.6;")
         dep_layout.addWidget(self.dep_status_label)
-        
-        refresh_dep_btn = QPushButton("Refresh Dependencies")
-        refresh_dep_btn.clicked.connect(self.refresh_dependencies)
-        dep_layout.addWidget(refresh_dep_btn)
         
         content_layout.addWidget(dep_card)
         
         # --- Privacy & Legal Section ---
-        privacy_card = CardContainer(hover_elevation=False)
+        privacy_card = CardContainer()
+        privacy_card.setObjectName("legalCard") # Special identifier for legal
         privacy_layout = QVBoxLayout(privacy_card)
-        privacy_layout.addWidget(QLabel("<b>Privacy & Legal</b>"))
+        privacy_layout.setContentsMargins(24, 24, 24, 24)
+        privacy_layout.setSpacing(20)
+        
+        privacy_label = QLabel("PRIVACY & LEGAL")
+        privacy_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #f87171; letter-spacing: 1.5px;")
+        privacy_layout.addWidget(privacy_label)
         
         disclaimer = QLabel(
             "This tool is for educational and authorized diagnostic purposes only. "
@@ -122,10 +168,11 @@ class SettingsView(QWidget):
             "By using this application, you agree to take full responsibility for your actions."
         )
         disclaimer.setWordWrap(True)
-        disclaimer.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        disclaimer.setStyleSheet("color: #991b1b; background-color: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 6px; font-size: 12px; line-height: 1.5;")
         privacy_layout.addWidget(disclaimer)
         
         self.privacy_check = QCheckBox("I acknowledge and agree to the terms.")
+        self.privacy_check.setStyleSheet("color: #e2e8f0; font-weight: 500;")
         privacy_layout.addWidget(self.privacy_check)
         
         content_layout.addWidget(privacy_card)
@@ -134,16 +181,49 @@ class SettingsView(QWidget):
         scroll.setWidget(content)
         layout.addWidget(scroll)
         
+        # Entrance animations
+        from netdoctor.gui.widgets.animations import fade_in
+        fade_in(self, duration=400)
+        
         # Initial dependency check
         self.refresh_dependencies()
 
     def _add_setting_row(self, label: str, widget: QWidget, parent_layout: QVBoxLayout):
-        """Helper to add a labeled setting row."""
-        row = QHBoxLayout()
-        row.addWidget(QLabel(label))
+        """Helper to add a labeled setting row with hover and group styling."""
+        row_widget = QFrame()
+        row_widget.setObjectName("settingRow")
+        row_widget.setStyleSheet("""
+            QFrame#settingRow {
+                background-color: rgba(15, 23, 42, 0.3);
+                border-radius: 8px;
+                border: 1px solid transparent;
+            }
+            QFrame#settingRow:hover {
+                background-color: rgba(30, 41, 59, 0.5);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+            }
+        """)
+        
+        row = QHBoxLayout(row_widget)
+        row.setContentsMargins(12, 8, 12, 8)
+        
+        label_widget = QLabel(label)
+        label_widget.setStyleSheet("color: #e2e8f0; font-size: 13px; font-weight: 500; background: transparent;")
+        
+        row.addWidget(label_widget)
         row.addStretch()
+        
+        if isinstance(widget, QSpinBox):
+            widget.setFixedHeight(32)
+            widget.setFixedWidth(80)
+        elif isinstance(widget, QComboBox):
+            widget.setFixedHeight(32)
+            widget.setMinimumWidth(120)
+        elif isinstance(widget, QLineEdit):
+            widget.setFixedHeight(32)
+            
         row.addWidget(widget)
-        parent_layout.addLayout(row)
+        parent_layout.addWidget(row_widget)
         return widget
 
     def browse_nmap(self):

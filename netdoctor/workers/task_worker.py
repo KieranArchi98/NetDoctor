@@ -12,6 +12,9 @@ from PySide6.QtCore import QObject, QRunnable, Signal, QThreadPool
 class WorkerSignals(QObject):
     """Signals that can be emitted by TaskWorker."""
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
     progress = Signal(int)  # Progress percentage (0-100)
     row = Signal(dict)  # Emit a row of data (dict)
     log = Signal(str)  # Emit a log message

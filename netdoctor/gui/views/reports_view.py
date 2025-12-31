@@ -26,8 +26,8 @@ class ReportsView(QWidget):
     def init_ui(self):
         """Initialize the UI."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(20)
+        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setSpacing(24)
         
         from pathlib import Path
         icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
@@ -45,8 +45,9 @@ class ReportsView(QWidget):
         splitter = QSplitter(Qt.Vertical)
         
         # Session List Card
-        list_card = CardContainer(hover_elevation=False)
+        list_card = CardContainer()
         list_layout = QVBoxLayout(list_card)
+        list_layout.setContentsMargins(0, 0, 0, 0) # Table should flush to card edges if possible, or use padding in QSS
         
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["ID", "Timestamp", "Tool", "Target"])
@@ -62,14 +63,27 @@ class ReportsView(QWidget):
         self.table.verticalHeader().setVisible(False)
         
         list_layout.addWidget(self.table)
+        
+        # Empty state for table
+        self.list_empty_label = QLabel("No diagnostic sessions found")
+        self.list_empty_label.setObjectName("sectionSubtitle")
+        self.list_empty_label.setAlignment(Qt.AlignCenter)
+        self.list_empty_label.setStyleSheet("padding: 40px; color: #64748b;")
+        self.list_empty_label.hide()
+        list_layout.addWidget(self.list_empty_label)
+        
         splitter.addWidget(list_card)
         
         # Details Card
-        details_card = CardContainer(hover_elevation=False)
+        details_card = CardContainer()
         details_layout = QVBoxLayout(details_card)
+        details_layout.setContentsMargins(24, 24, 24, 24)
+        details_layout.setSpacing(16)
         
         details_header = QHBoxLayout()
-        details_header.addWidget(QLabel("Session Details"))
+        details_label = QLabel("SESSION DETAILS")
+        details_label.setStyleSheet("font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: 1.5px;")
+        details_header.addWidget(details_label)
         details_header.addStretch()
         
         self.export_csv_btn = QPushButton("Export CSV")
@@ -89,13 +103,26 @@ class ReportsView(QWidget):
         self.details_text = QTextEdit()
         self.details_text.setReadOnly(True)
         self.details_text.setObjectName("detailsArea")
+        
+        # Details empty state
+        self.details_empty_label = QLabel("Select a session to view details")
+        self.details_empty_label.setObjectName("sectionSubtitle")
+        self.details_empty_label.setAlignment(Qt.AlignCenter)
+        self.details_empty_label.setStyleSheet("color: #64748b;")
+        
         details_layout.addWidget(self.details_text)
+        details_layout.addWidget(self.details_empty_label)
+        self.details_text.hide() # Hide text by default
         
         splitter.addWidget(details_card)
         
         # Set initial splitter sizes (roughly 60% top, 40% bottom)
         layout.addWidget(splitter, 1)
         splitter.setSizes([400, 300])
+        
+        # Entrance animations
+        from netdoctor.gui.widgets.animations import fade_in
+        fade_in(self, duration=400)
 
     def refresh_sessions(self):
         """Refresh the list of sessions from storage."""
@@ -111,6 +138,11 @@ class ReportsView(QWidget):
             self.table.setItem(row_idx, 2, QTableWidgetItem(session.get("tool", "")))
             self.table.setItem(row_idx, 3, QTableWidgetItem(session.get("target", "")))
             
+        # Update empty states
+        has_data = len(sessions) > 0
+        self.table.setVisible(has_data)
+        self.list_empty_label.setVisible(not has_data)
+            
         self.on_selection_changed()
         
         if self.window() and hasattr(self.window(), "show_toast"):
@@ -121,9 +153,14 @@ class ReportsView(QWidget):
         selected_items = self.table.selectedItems()
         if not selected_items:
             self.details_text.clear()
+            self.details_text.hide()
+            self.details_empty_label.show()
             self.export_csv_btn.setEnabled(False)
             self.export_json_btn.setEnabled(False)
             return
+            
+        self.details_empty_label.hide()
+        self.details_text.show()
             
         session_id = selected_items[0].text()
         session = history.load_session(session_id)

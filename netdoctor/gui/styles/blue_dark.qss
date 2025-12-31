@@ -102,6 +102,7 @@ QPushButton {
 
 QPushButton:hover {
     background-color: #60a5fa;  /* secondary_blue */
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 QPushButton:pressed {
@@ -190,7 +191,7 @@ QLineEdit, QTextEdit, QPlainTextEdit {
 
 QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
     border: 1px solid #3b82f6;  /* border_focus / primary_blue */
-    background-color: #0f172a;  /* bg_card */
+    background-color: #111e3b;  /* slightly darker on focus */
 }
 
 QLineEdit:disabled, QTextEdit:disabled, QPlainTextEdit:disabled {
@@ -409,14 +410,13 @@ QRadioButton::indicator:disabled {
 
 /* ===== TABLES ===== */
 QTableView, QTableWidget {
-    background-color: #181825;  /* bg_sidebar */
-    color: #E4E4E7;  /* text_primary */
-    gridline-color: #313244;  /* border */
-    border: 1px solid #313244;  /* border */
-    border-radius: 8px;
-    selection-background-color: rgba(74, 144, 226, 0.2);  /* selection */
-    selection-color: #4A90E2;  /* primary_blue */
-    alternate-background-color: #1F1F2F;  /* bg_card */
+    background-color: transparent;
+    color: #f1f5f9;  /* text_primary */
+    gridline-color: rgba(255, 255, 255, 0.03);
+    border: none;
+    selection-background-color: rgba(59, 130, 246, 0.1);
+    selection-color: #3b82f6;
+    alternate-background-color: rgba(255, 255, 255, 0.02);
 }
 
 QTableView::item, QTableWidget::item {
@@ -434,14 +434,15 @@ QTableView::item:selected, QTableWidget::item:selected {
 }
 
 QHeaderView::section {
-    background-color: #181825;  /* bg_sidebar / table_header */
-    color: #4A90E2;  /* primary_blue / table_header_text */
-    padding: 10px 12px;
+    background-color: transparent;
+    color: #94a3b8;  /* text_secondary */
+    padding: 16px 12px;
     border: none;
-    border-bottom: 2px solid #313244;  /* border */
-    border-right: 1px solid #313244;  /* border */
-    font-weight: 600;
-    font-size: 12px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 QHeaderView::section:first {
@@ -725,20 +726,18 @@ QDialog {
 
 /* ===== SIDEBAR SPECIFIC ===== */
 QWidget#sidebar {
-    /* Force sidebar to match the logo section background for a unified column */
-    background-color: #1a2333;  /* same as sidebarLogo (darker) */
-    border-right: 1px solid #334155;  /* border (Slate 700) */
+    background-color: #060b14;  /* Even darker than main main bg (#0f172a) */
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Background widget for the sidebar column (sits behind nav links) */
 QWidget#sidebarBackground {
-    background-color: #1a2333 !important; /* force match with logo section */
+    background-color: #060b14 !important;
 }
 
 QWidget#sidebarLogo {
-    background-color: #1a2333;  /* Slightly darker than sidebar for depth */
-    padding: 24px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: transparent;
+    padding: 30px 20px;
 }
 
 QLabel#sidebarTitle {
@@ -760,22 +759,22 @@ QLabel#sidebarSubtitle {
 QPushButton#navButton {
     background-color: transparent;
     border: none;
-    padding: 12px 20px;
+    padding: 12px 16px;
     text-align: left;
     color: #94a3b8;  /* text_secondary */
     font-size: 14px;
     font-weight: 500;
-    border-radius: 12px;
-    margin: 4px 12px;
+    border-radius: 8px;
+    margin: 2px 15px;
 }
 
 QPushButton#navButton:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.03);
     color: #f1f5f9;  /* text_primary */
 }
 
 QPushButton#navButton:checked {
-    background-color: rgba(59, 130, 246, 0.1);  /* selection with 10% opacity */
+    background-color: rgba(59, 130, 246, 0.08);
     color: #3b82f6;  /* primary_blue */
     font-weight: 600;
 }
@@ -803,6 +802,11 @@ QWidget#cardContainer[hover="true"] {
     border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
+QWidget#cardContainer[hover="true"] {
+    background-color: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 /* ===== KPI CARDS ===== */
 QWidget#kpiCard {
     background-color: rgba(30, 41, 59, 0.4);
@@ -820,8 +824,9 @@ QLabel#kpiCardTitle {
 
 QLabel#kpiCardValue {
     color: #f8fafc;  /* text_primary */
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
+    font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
     background-color: transparent;
 }
 
@@ -852,6 +857,7 @@ QLabel#statCardValue {
     color: #f1f5f9;  /* text_primary */
     font-size: 22px;
     font-weight: 700;
+    font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
     background-color: transparent;
 }
 

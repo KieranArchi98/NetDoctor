@@ -36,23 +36,26 @@ class DashboardView(QWidget):
     def init_ui(self):
         """Initialize the UI."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(20)
+        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setSpacing(24) # Standard 8px scale (3 * 8)
 
         # Custom Header (Dashboard + User Info)
         header_layout = QHBoxLayout()
-        header_layout.setSpacing(12)
+        header_layout.setSpacing(16)
         
         # Left: Dashboard Title
         title_container = QWidget()
         title_lines = QVBoxLayout(title_container)
         title_lines.setContentsMargins(0, 0, 0, 0)
-        title_lines.setSpacing(2)
+        title_lines.setSpacing(4)
         
         page_title = QLabel("Dashboard")
         page_title.setObjectName("pageTitle")
+        page_title.setStyleSheet("font-size: 32px; font-weight: 800; color: #f8fafc;")
+        
         page_subtitle = QLabel("Overview of system and network status")
         page_subtitle.setObjectName("sectionSubtitle")
+        page_subtitle.setStyleSheet("font-size: 14px; color: #94a3b8;")
         
         title_lines.addWidget(page_title)
         title_lines.addWidget(page_subtitle)
@@ -60,22 +63,29 @@ class DashboardView(QWidget):
         
         header_layout.addStretch()
         
-        # Right: User Session Info
+        # Right: User Session Info in a subtle pill
         current_user = getpass.getuser()
         user_container = QWidget()
-        user_container.setObjectName("kpiCard")
+        user_container.setObjectName("userBadge")
+        user_container.setStyleSheet("""
+            QWidget#userBadge {
+                background-color: rgba(59, 130, 246, 0.1);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 10px;
+            }
+        """)
         user_layout = QHBoxLayout(user_container)
-        user_layout.setContentsMargins(16, 8, 16, 8)
+        user_layout.setContentsMargins(12, 6, 12, 6)
         user_layout.setSpacing(8)
         
         user_icon = QLabel("👤")
-        user_icon.setStyleSheet("font-size: 16px;")
-        user_label = QLabel(f"User: {current_user}")
-        user_label.setStyleSheet("font-weight: 600;")
+        user_icon.setStyleSheet("font-size: 14px;")
+        user_label = QLabel(current_user)
+        user_label.setStyleSheet("font-weight: 700; color: #3b82f6; font-size: 13px; text-transform: uppercase;")
         
         user_layout.addWidget(user_icon)
         user_layout.addWidget(user_label)
-        header_layout.addWidget(user_container)
+        header_layout.addWidget(user_container, 0, Qt.AlignVCenter)
         
         layout.addLayout(header_layout)
 
@@ -103,42 +113,59 @@ class DashboardView(QWidget):
 
         layout.addLayout(stats_layout)
 
-        # Process Tables (Split 50/50)
+        # Row 2: Dynamic System Metrics
+        metrics_layout = QHBoxLayout()
+        metrics_layout.setSpacing(16)
+        
+        self.cpu_card = KPICard("CPU Utilization", "0.0%")
+        self.mem_card = KPICard("Memory Usage", "0.0%")
+        self.disk_card = KPICard("Disk Usage", "0.0%")
+        
+        metrics_layout.addWidget(self.cpu_card)
+        metrics_layout.addWidget(self.mem_card)
+        metrics_layout.addWidget(self.disk_card)
+        layout.addLayout(metrics_layout)
+
+        # Row 3: Process Tables with Card Wrappers
         tables_layout = QHBoxLayout()
-        tables_layout.setSpacing(16)
+        tables_layout.setSpacing(24)
 
         from pathlib import Path
         icon_dir = Path(__file__).parent.parent.parent / "resources" / "icons"
 
         # Table 1: Top Applications (User)
-        apps_container = QWidget()
-        apps_layout = QVBoxLayout(apps_container)
-        apps_layout.setContentsMargins(0, 0, 0, 0)
+        apps_card = CardContainer()
+        apps_layout = QVBoxLayout(apps_card)
+        apps_layout.setContentsMargins(16, 16, 16, 16)
+        apps_layout.setSpacing(12)
+        
         apps_header = SectionHeader(
             "Top Applications", 
-            "User processes by usage",
+            "User processes sorted by CPU usage",
             icon_path=str(icon_dir / "system.svg")
         )
         apps_layout.addWidget(apps_header)
         
         self.app_table = self._create_process_table()
         apps_layout.addWidget(self.app_table)
-        tables_layout.addWidget(apps_container)
+        tables_layout.addWidget(apps_card)
 
         # Table 2: Background Processes (System)
-        procs_container = QWidget()
-        procs_layout = QVBoxLayout(procs_container)
-        procs_layout.setContentsMargins(0, 0, 0, 0)
+        procs_card = CardContainer()
+        procs_layout = QVBoxLayout(procs_card)
+        procs_layout.setContentsMargins(16, 16, 16, 16)
+        procs_layout.setSpacing(12)
+        
         procs_header = SectionHeader(
-            "System Processes", 
-            "Background services by usage",
+            "System Services", 
+            "Background processes sorted by CPU usage",
             icon_path=str(icon_dir / "system.svg")
         )
         procs_layout.addWidget(procs_header)
         
         self.proc_table = self._create_process_table()
         procs_layout.addWidget(self.proc_table)
-        tables_layout.addWidget(procs_container)
+        tables_layout.addWidget(procs_card)
 
         layout.addLayout(tables_layout)
 
@@ -154,8 +181,12 @@ class DashboardView(QWidget):
 
         layout.addWidget(activity_card)
         
-        # Initial load
+        # Initial load and fade-in
         self.refresh_dashboard()
+        
+        # Entrance animations
+        from netdoctor.gui.widgets.animations import fade_in
+        fade_in(self, duration=400)
 
     def _create_process_table(self):
         """Create a styled table for processes."""
@@ -172,28 +203,37 @@ class DashboardView(QWidget):
         return table
 
     def refresh_dashboard(self):
-        """Update process tables dynamically."""
+        """Update system metrics and process tables."""
         if not psutil:
             return
 
         try:
+            # Update System Metrics
+            cpu_percent = psutil.cpu_percent()
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            self.cpu_card.set_value(f"{cpu_percent:.1f}%")
+            self.mem_card.set_value(f"{mem.percent:.1f}%")
+            self.disk_card.set_value(f"{disk.percent:.1f}%")
+
             current_user = getpass.getuser()
             user_procs = []
             sys_procs = []
             
-            # Iterate processes
+            # Iterate processes (prime CPU percent manually on first run if needed)
             for p in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
                 try:
-                    p.cpu_percent() # Prime cpu_percent
                     # Simple user filter
-                    if p.info['username'] and current_user in p.info['username']:
+                    username = p.info.get('username')
+                    if username and current_user in username:
                         user_procs.append(p)
                     else:
                         sys_procs.append(p)
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     pass
             
-            # Sort and slice
+            # Sort by CPU usage
             user_procs.sort(key=lambda p: p.info['cpu_percent'] or 0, reverse=True)
             sys_procs.sort(key=lambda p: p.info['cpu_percent'] or 0, reverse=True)
             

@@ -14,8 +14,8 @@ class ActiveIndicator(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("navIndicator")
-        self.setFixedWidth(4)
-        self.setFixedHeight(30)
+        self.setFixedWidth(3)
+        self.setFixedHeight(24)
         self.setAttribute(Qt.WA_TransparentForMouseEvents)  # FIX: Don't block clicks
         self.hide()
         
@@ -141,14 +141,26 @@ class Sidebar(QWidget):
         logo_widget = QWidget()
         logo_widget.setObjectName("sidebarLogo")
         logo_layout = QVBoxLayout(logo_widget)
-        logo_layout.setContentsMargins(20, 30, 20, 30)
+        logo_layout.setContentsMargins(25, 40, 25, 20)
+        logo_layout.setSpacing(4)
         
         self.logo_label = QLabel("NetDoctor")
-        self.logo_label.setStyleSheet("font-weight: 900; font-size: 24px; color: #3B82F6;")
+        self.logo_label.setStyleSheet("""
+            font-weight: 900; 
+            font-size: 26px; 
+            color: #f1f5f9;
+            letter-spacing: -0.5px;
+        """)
         logo_layout.addWidget(self.logo_label)
         
-        self.logo_tagline = QLabel("Diagnostic Toolkit")
-        self.logo_tagline.setObjectName("sectionSubtitle")
+        self.logo_tagline = QLabel("UTILITY TOOLKIT")
+        self.logo_tagline.setStyleSheet("""
+            color: #3b82f6;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        """)
         logo_layout.addWidget(self.logo_tagline)
         
         return logo_widget

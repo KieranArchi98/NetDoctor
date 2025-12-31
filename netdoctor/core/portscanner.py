@@ -7,7 +7,7 @@ TCP connect scanning across ranges with configurable concurrency.
 import socket
 import subprocess
 import shutil
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union, Optional, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from netdoctor.config import DEFAULT_PORT_SCAN_TIMEOUT, DEFAULT_PORT_SCAN_THREADS
@@ -127,6 +127,37 @@ def _scan_single_port(
     return result
 
 
+def scan_ports_iter(
+    host: str,
+    ports: Union[str, int, List[int]],
+    timeout: float = 1.0,
+    concurrency: int = DEFAULT_PORT_SCAN_THREADS,
+    banner_grab: bool = False,
+) -> Iterator[Dict[str, Any]]:
+    """
+    Scan multiple ports on a host and yield results as they complete.
+    """
+    port_list = _parse_port_range(ports)
+    if not port_list:
+        return
+
+    def scan_port(port: int) -> Dict[str, Any]:
+        return _scan_single_port(host, port, timeout, banner_grab)
+
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        future_to_port = {executor.submit(scan_port, port): port for port in port_list}
+        for future in as_completed(future_to_port):
+            try:
+                yield future.result()
+            except Exception as e:
+                port = future_to_port[future]
+                yield {
+                    "port": port,
+                    "state": "closed",
+                    "banner": None,
+                    "error": str(e),
+                }
+
 def scan_ports(
     host: str,
     ports: Union[str, int, List[int]],
@@ -136,47 +167,8 @@ def scan_ports(
 ) -> List[Dict[str, Any]]:
     """
     Scan multiple ports on a host using TCP connect scanning.
-
-    Args:
-        host: Hostname or IP address to scan
-        ports: Port specification (int, list, or string like "80,443,8000-8010")
-        timeout: Connection timeout per port in seconds (default: 1.0)
-        concurrency: Maximum number of concurrent scans (default: 100)
-        banner_grab: If True, attempt to grab banners from open ports (default: False)
-
-    Returns:
-        List of dictionaries with keys: port, state (open/closed), banner (optional), error (optional)
     """
-    port_list = _parse_port_range(ports)
-    if not port_list:
-        return []
-
-    results = []
-
-    def scan_port(port: int) -> Dict[str, Any]:
-        return _scan_single_port(host, port, timeout, banner_grab)
-
-    with ThreadPoolExecutor(max_workers=concurrency) as executor:
-        # Submit all port scans
-        future_to_port = {executor.submit(scan_port, port): port for port in port_list}
-
-        # Collect results as they complete
-        for future in as_completed(future_to_port):
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                port = future_to_port[future]
-                results.append(
-                    {
-                        "port": port,
-                        "state": "closed",
-                        "banner": None,
-                        "error": str(e),
-                    }
-                )
-
-    # Sort results by port number
+    results = list(scan_ports_iter(host, ports, timeout, concurrency, banner_grab))
     return sorted(results, key=lambda x: x["port"])
 
 

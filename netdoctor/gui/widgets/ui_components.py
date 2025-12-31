@@ -190,8 +190,8 @@ class ToastNotification(QWidget):
         self.show()
         
         self.animation = QPropertyAnimation(self, b"pos")
-        self.animation.setDuration(400)
-        self.animation.setEasingCurve(QEasingCurve.OutExpo)
+        self.animation.setDuration(250)
+        self.animation.setEasingCurve(QEasingCurve.OutCubic)
         self.animation.setStartValue(start_pos)
         self.animation.setEndValue(end_pos)
         self.animation.start()
@@ -205,8 +205,8 @@ class ToastNotification(QWidget):
         end_pos = QPoint(self.parent().width(), current_pos.y())
         
         self.hide_anim = QPropertyAnimation(self, b"pos")
-        self.hide_anim.setDuration(300)
-        self.hide_anim.setEasingCurve(QEasingCurve.InExpo)
+        self.hide_anim.setDuration(200)
+        self.hide_anim.setEasingCurve(QEasingCurve.InCubic)
         self.hide_anim.setStartValue(current_pos)
         self.hide_anim.setEndValue(end_pos)
         self.hide_anim.finished.connect(self.deleteLater)
@@ -322,7 +322,7 @@ class LoadingSpinner(QLabel):
         self._is_spinning = False
         self._timer.stop()
         # Fade out then hide
-        fade_out(self, duration=150, on_finished=self.hide)
+        fade_out(self, duration=120, on_finished=self.hide)
 
 
 class ProgressIndicator(QProgressBar):
@@ -346,3 +346,61 @@ class ProgressIndicator(QProgressBar):
         else:
             self.setFormat("%p%")
 
+class LoadingOverlay(QWidget):
+    """
+    Overlay widget with a blur effect (simulated via semi-transparent background) 
+    and a spinner in the center.
+    """
+    
+    def __init__(self, parent_widget: QWidget):
+        super().__init__(parent_widget)
+        self.setObjectName("loadingOverlay")
+        self.setAttribute(Qt.WA_NoSystemBackground)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, False) # Block clicks
+        self.hide()
+        
+        # Center layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setAlignment(Qt.AlignCenter)
+        
+        # Spinner container
+        container = CardContainer(hover_elevation=False)
+        container.setFixedSize(140, 140)
+        container_layout = QVBoxLayout(container)
+        container_layout.setAlignment(Qt.AlignCenter)
+        container_layout.setSpacing(15)
+        
+        self.spinner = LoadingSpinner(size=48)
+        container_layout.addWidget(self.spinner, 0, Qt.AlignCenter)
+        
+        self.label = QLabel("Processing...")
+        self.label.setObjectName("sectionSubtitle")
+        self.label.setAlignment(Qt.AlignCenter)
+        container_layout.addWidget(self.label)
+        
+        main_layout.addWidget(container)
+        
+    def start(self, message: str = "Processing..."):
+        """Show overlay with message."""
+        self.label.setText(message)
+        self.resize(self.parentWidget().size())
+        self.show()
+        self.spinner.start()
+        
+        # Fade in overlay background
+        self.setWindowOpacity(0.0)
+        from netdoctor.gui.widgets.animations import fade_in
+        self._fade_anim = fade_in(self, duration=200)
+        
+    def stop(self):
+        """Fade out and hide."""
+        from netdoctor.gui.widgets.animations import fade_out
+        self.spinner.stop()
+        # Store animation to prevent garbage collection before completion
+        self._fade_anim = fade_out(self, duration=150, on_finished=self.hide)
+        
+    def resizeEvent(self, event):
+        """Ensure overlay covers the parent."""
+        if self.parentWidget():
+            self.resize(self.parentWidget().size())
+        super().resizeEvent(event)
